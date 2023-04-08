@@ -7,10 +7,13 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -18,12 +21,20 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BP.ColourChimp.Classes;
 using BP.ColourChimp.Converters;
+using BP.ColourChimp.Extensions;
 using BP.ColourChimp.Properties;
-using Microsoft.Win32;
+using Application = System.Windows.Application;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
+using Cursors = System.Windows.Input.Cursors;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MenuItem = System.Windows.Controls.MenuItem;
+using MessageBox = System.Windows.MessageBox;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using Point = System.Drawing.Point;
 using Rectangle = System.Windows.Shapes.Rectangle;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 using Size = System.Windows.Size;
 using SystemColors = System.Windows.SystemColors;
 
@@ -34,54 +45,39 @@ namespace BP.ColourChimp.Windows
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region Constants
+
+        private const Keys ColorSelectionModesModifierKey = Keys.Shift;
+        private const Key ColorSelectionModesModifierKeyWPF = Key.LeftShift;
+        private const Key IncrementAlphaKeyWPF = Key.Up;
+        private const Key DecrementAlphaKeyWPF = Key.Down;
+        private const Key IncrementBrightnessKeyWPF = Key.Right;
+        private const Key DeccrementBrightnessKeyWPF = Key.Left;
+        private const double FixedGridColoumns = 3d;
+
+        #endregion
+
         #region StaticProperties
 
-        /// <summary>
-        /// Get the modifier key for color selection modes
-        /// </summary>
-        private const System.Windows.Forms.Keys colorSelectionModesModifierKey = System.Windows.Forms.Keys.Shift;
+        private static Random RandomGenerator { get; } = new Random();
 
-        /// <summary>
-        /// Get the modifier key for color selction modes
-        /// </summary>
-        private const Key colorSelectionModesModifierKeyWPF = Key.LeftShift;
+        #endregion
 
-        /// <summary>
-        /// Get the key for increment alpha
-        /// </summary>
-        private const Key incrementAlphaKeyWPF = Key.Up;
+        #region Fields
 
-        /// <summary>
-        /// Get the key for deincrement alpha
-        /// </summary>
-        private const Key deincrementAlphaKeyWPF = Key.Down;
-
-        /// <summary>
-        /// Get the key for increment brightness
-        /// </summary>
-        private const Key incrementBrightnessKeyWPF = Key.Right;
-
-        /// <summary>
-        /// Get the key for deincrement brightness
-        /// </summary>
-        private const Key deincrementBrightnessKeyWPF = Key.Left;
-
-        /// <summary>
-        /// Get the fixed grid columns
-        /// </summary>
-        private const double fixedGridColoumns = 3d;
-
-        /// <summary>
-        /// Get the random generator
-        /// </summary>
-        private static readonly Random randomGenerator = new Random();
+        private Point? roiSelectionTopLeft;
+        private Point? roiSelectionBottomRight;
+        private BackgroundWorker roiGatherWorker;
+        private BackgroundWorker colorSorterWorker;
+        private readonly Mode defaultMode = Mode.Add;
+        private string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
 
         #endregion
 
         #region Properties
 
         /// <summary>
-        /// Get or set the alpha. This is a dependency property
+        /// Get or set the alpha. This is a dependency property.
         /// </summary>
         public byte Alpha
         {
@@ -90,7 +86,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the red. This is a dependency property
+        /// Get or set the red. This is a dependency property.
         /// </summary>
         public byte Red
         {
@@ -99,7 +95,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the green. This is a dependency property
+        /// Get or set the green. This is a dependency property.
         /// </summary>
         public byte Green
         {
@@ -108,7 +104,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the blue. This is a dependency property
+        /// Get or set the blue. This is a dependency property.
         /// </summary>
         public byte Blue
         {
@@ -117,7 +113,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the cyan. This is specified as a percentage. This is a dependency property
+        /// Get or set the cyan. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double Cyan
         {
@@ -126,7 +122,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the magenta. This is specified as a percentage. This is a dependency property
+        /// Get or set the magenta. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double Magenta
         {
@@ -135,7 +131,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the yellow. This is specified as a percentage. This is a dependency property
+        /// Get or set the yellow. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double Yellow
         {
@@ -144,7 +140,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the key. This is specified as a percentage. This is a dependency property
+        /// Get or set the key. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double K
         {
@@ -153,7 +149,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the hue. This is specified as a percentage. This is a dependency property
+        /// Get or set the hue. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double Hue
         {
@@ -162,7 +158,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the saturation. This is specified as a percentage. This is a dependency property
+        /// Get or set the saturation. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double Saturation
         {
@@ -171,7 +167,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the value. This is specified as a percentage. This is a dependency property
+        /// Get or set the value. This is specified as a percentage. This is a dependency property.
         /// </summary>
         public double Value
         {
@@ -180,7 +176,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get the current status. This is a dependency property
+        /// Get the current status. This is a dependency property.
         /// </summary>
         public string Status
         {
@@ -189,7 +185,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the mode. This is a dependency property
+        /// Get or set the mode. This is a dependency property.
         /// </summary>
         public Mode Mode
         {
@@ -198,7 +194,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get if this control has some children colors. This is a dependency property
+        /// Get if this control has some children colors. This is a dependency property.
         /// </summary>
         public bool HasChildrenColors
         {
@@ -207,7 +203,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get if all background operations are idle. This is a dependency property
+        /// Get if all background operations are idle. This is a dependency property.
         /// </summary>
         public bool AllBackgroundOperationsIdle
         {
@@ -216,7 +212,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get or set the value used to determine channel dominance as a normalised value (0.0-1.0). This is a dependency property
+        /// Get or set the value used to determine channel dominance as a normalised value (0.0-1.0). This is a dependency property.
         /// </summary>
         public double ChannelDominance
         {
@@ -225,7 +221,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get the amount of colors currently displayed. This is a dependency property
+        /// Get the amount of colors currently displayed. This is a dependency property.
         /// </summary>
         public double ColorCount
         {
@@ -234,7 +230,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get of set if alpha is maxed out on previews. This is a dependency property
+        /// Get of set if alpha is maxed out on previews. This is a dependency property.
         /// </summary>
         public bool MaxOutAlphaOnPreview
         {
@@ -243,7 +239,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get of set the grid mode. This is a dependency property
+        /// Get of set the grid mode. This is a dependency property.
         /// </summary>
         public GridMode GridMode
         {
@@ -252,7 +248,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get of set the number of fixed columns. This is only applicable when the GridMode property is set to MaintainSize. This is a dependency property
+        /// Get of set the number of fixed columns. This is only applicable when the GridMode property is set to MaintainSize. This is a dependency property.
         /// </summary>
         public double FixedColumns
         {
@@ -261,7 +257,7 @@ namespace BP.ColourChimp.Windows
         }
 
         /// <summary>
-        /// Get of set the color space. This is only applicable when the GridMode property is set to MaintainSize. This is a dependency property
+        /// Get of set the color space. This is only applicable when the GridMode property is set to MaintainSize. This is a dependency property.
         /// </summary>
         public ColorSpace ColorSpace
         {
@@ -269,1034 +265,526 @@ namespace BP.ColourChimp.Windows
             private set { SetValue(ColorSpaceProperty, value); }
         }
 
-        /// <summary>
-        /// Get or set the ROI top left
-        /// </summary>
-        private Point? roiSelectionTopLeft;
-
-        /// <summary>
-        /// Get or set the ROI bottom right
-        /// </summary>
-        private Point? roiSelectionBottomRight;
-
-        /// <summary>
-        /// Get or set the ROI gathering worker
-        /// </summary>
-        private BackgroundWorker roiGatherWorker;
-
-        /// <summary>
-        /// Get or set the color arangement worker
-        /// </summary>
-        private BackgroundWorker colorArangmentWorker;
-
-        /// <summary>
-        /// Get or set the RGB to CMYK converter
-        /// </summary>
-        private readonly IValueConverter rgb2cmykConverter = new RGBToCMYKConverter();
-
-        /// <summary>
-        /// Get or set the RGB to HSV converter
-        /// </summary>
-        private readonly IValueConverter rgb2hsvConverter = new RGBToHSVConverter();
-
-        /// <summary>
-        /// Get or set the default mode
-        /// </summary>
-        private readonly Mode defaultMode = Mode.Add;
-
-        /// <summary>
-        /// Get or set the default path
-        /// </summary>
-        private string defaultPath = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-
         #endregion
 
         #region DependencyProperties
 
         /// <summary>
-        /// Indetifies the MainWindow.Alpha property
+        /// Identifies the MainWindow.Alpha property.
         /// </summary>
         public static readonly DependencyProperty AlphaProperty = DependencyProperty.Register("Alpha", typeof(byte), typeof(MainWindow), new PropertyMetadata((byte)255, OnSharedARGBPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Red property
+        /// Identifies the MainWindow.Red property.
         /// </summary>
         public static readonly DependencyProperty RedProperty = DependencyProperty.Register("Red", typeof(byte), typeof(MainWindow), new PropertyMetadata((byte)255, OnSharedARGBPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Green property
+        /// Identifies the MainWindow.Green property.
         /// </summary>
         public static readonly DependencyProperty GreenProperty = DependencyProperty.Register("Green", typeof(byte), typeof(MainWindow), new PropertyMetadata((byte)255, OnSharedARGBPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Blue property
+        /// Identifies the MainWindow.Blue property.
         /// </summary>
         public static readonly DependencyProperty BlueProperty = DependencyProperty.Register("Blue", typeof(byte), typeof(MainWindow), new PropertyMetadata((byte)255, OnSharedARGBPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Cyan property
+        /// Identifies the MainWindow.Cyan property.
         /// </summary>
         public static readonly DependencyProperty CyanProperty = DependencyProperty.Register("Cyan", typeof(double), typeof(MainWindow), new PropertyMetadata(0d, OnSharedCMYKPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Magenta property
+        /// Identifies the MainWindow.Magenta property.
         /// </summary>
         public static readonly DependencyProperty MagentaProperty = DependencyProperty.Register("Magenta", typeof(double), typeof(MainWindow), new PropertyMetadata(0d, OnSharedCMYKPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Yellow property
+        /// Identifies the MainWindow.Yellow property.
         /// </summary>
         public static readonly DependencyProperty YellowProperty = DependencyProperty.Register("Yellow", typeof(double), typeof(MainWindow), new PropertyMetadata(0d, OnSharedCMYKPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.K property
+        /// Identifies the MainWindow.K property.
         /// </summary>
         public static readonly DependencyProperty KProperty = DependencyProperty.Register("K", typeof(double), typeof(MainWindow), new PropertyMetadata(0d, OnSharedCMYKPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Hue property
+        /// Identifies the MainWindow.Hue property.
         /// </summary>
         public static readonly DependencyProperty HueProperty = DependencyProperty.Register("Hue", typeof(double), typeof(MainWindow), new PropertyMetadata(100d, OnSharedHSVPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Saturation property
+        /// Identifies the MainWindow.Saturation property.
         /// </summary>
         public static readonly DependencyProperty SaturationProperty = DependencyProperty.Register("Saturation", typeof(double), typeof(MainWindow), new PropertyMetadata(0d, OnSharedHSVPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Value property
+        /// Identifies the MainWindow.Value property.
         /// </summary>
         public static readonly DependencyProperty ValueProperty = DependencyProperty.Register("Value", typeof(double), typeof(MainWindow), new PropertyMetadata(100d, OnSharedHSVPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.Status property
+        /// Identifies the MainWindow.Status property.
         /// </summary>
         public static readonly DependencyProperty StatusProperty = DependencyProperty.Register("Status", typeof(string), typeof(MainWindow), new PropertyMetadata("Ready"));
 
         /// <summary>
-        /// Indetifies the MainWindow.HasChildrenColors property
+        /// Identifies the MainWindow.HasChildrenColors property.
         /// </summary>
         public static readonly DependencyProperty HasChildrenColorsProperty = DependencyProperty.Register("HasChildrenColors", typeof(bool), typeof(MainWindow), new PropertyMetadata(false));
 
         /// <summary>
-        /// Indetifies the MainWindow.AllBackgroundOperationsIdle property
+        /// Identifies the MainWindow.AllBackgroundOperationsIdle property.
         /// </summary>
         public static readonly DependencyProperty AllBackgroundOperationsIdleProperty = DependencyProperty.Register("AllBackgroundOperationsIdle", typeof(bool), typeof(MainWindow), new PropertyMetadata(true));
 
         /// <summary>
-        /// Indetifies the MainWindow.ChannelDominance property
+        /// Identifies the MainWindow.ChannelDominance property.
         /// </summary>
         public static readonly DependencyProperty ChannelDominanceProperty = DependencyProperty.Register("ChannelDominance", typeof(double), typeof(MainWindow), new PropertyMetadata(0.4d));
 
         /// <summary>
-        /// Indetifies the MainWindow.ColorCount property
+        /// Identifies the MainWindow.ColorCount property.
         /// </summary>
         public static readonly DependencyProperty ColorCountProperty = DependencyProperty.Register("ColorCount", typeof(double), typeof(MainWindow), new PropertyMetadata(0d));
 
         /// <summary>
-        /// Indetifies the MainWindow.Mode property
+        /// Identifies the MainWindow.Mode property.
         /// </summary>
         public static readonly DependencyProperty ModeProperty = DependencyProperty.Register("Mode", typeof(Mode), typeof(MainWindow), new PropertyMetadata(Mode.Add, OnModePropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.MaxOutAlphaOnPreview property
+        /// Identifies the MainWindow.MaxOutAlphaOnPreview property.
         /// </summary>
         public static readonly DependencyProperty MaxOutAlphaOnPreviewProperty = DependencyProperty.Register("MaxOutAlphaOnPreview", typeof(bool), typeof(MainWindow), new PropertyMetadata(FullScreenPreviewWindow.MaxOutAlphaOnPreview, OnMaxOutAlphaOnPreviewPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.GridMode property
+        /// Identifies the MainWindow.GridMode property.
         /// </summary>
         public static readonly DependencyProperty GridModeProperty = DependencyProperty.Register("GridMode", typeof(GridMode), typeof(MainWindow), new PropertyMetadata(GridMode.FitToArea, OnGridModePropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.FixedColumns property
+        /// Identifies the MainWindow.FixedColumns property.
         /// </summary>
-        public static readonly DependencyProperty FixedColumnsProperty = DependencyProperty.Register("FixedColumns", typeof(double), typeof(MainWindow), new PropertyMetadata(fixedGridColoumns, OnFixedColumnsPropertyChanged));
+        public static readonly DependencyProperty FixedColumnsProperty = DependencyProperty.Register("FixedColumns", typeof(double), typeof(MainWindow), new PropertyMetadata(FixedGridColoumns, OnFixedColumnsPropertyChanged));
 
         /// <summary>
-        /// Indetifies the MainWindow.ColorSpace property
+        /// Identifies the MainWindow.ColorSpace property.
         /// </summary>
         public static readonly DependencyProperty ColorSpaceProperty = DependencyProperty.Register("ColorSpace", typeof(ColorSpace), typeof(MainWindow), new PropertyMetadata(ColorSpace.ARGB));
 
         #endregion
 
-        #region Methods
+        #region Constructors
 
         /// <summary>
-        /// Initialize a new instance of the MainWindow class
+        /// Initialize a new instance of the MainWindow class.
         /// </summary>
         public MainWindow()
         {
             InitializeComponent();
-
-            // load settings
-            loadSettingsFromManifest();
+            LoadSettingsFromManifest();
         }
 
-        /// <summary>
-        /// Load all settings from the manifest
-        /// </summary>
-        private void loadSettingsFromManifest()
+        #endregion
+
+        #region Methods
+
+        private void LoadSettingsFromManifest()
         {
             try
             {
-                // set topmost
                 Topmost = Settings.Default.KeepApplicationInForeground;
-
-                // set fixed columns
                 FixedColumns = Settings.Default.Columns;
-
-                // set if maxing out
                 MaxOutAlphaOnPreview = Settings.Default.UseMaximumAlphaOnPreview;
-
-                // set grid mode
-                GridMode = (GridMode)Enum.Parse(typeof(GridMode), Settings.Default.GridMode.ToString());
-
-                // set color space
-                ColorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), Settings.Default.ColorSpace.ToString());
+                GridMode = (GridMode)Enum.Parse(typeof(GridMode), Settings.Default.GridMode);
+                ColorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), Settings.Default.ColorSpace);
             }
-            catch (NullReferenceException)
+            catch (Exception e)
             {
-                MessageBox.Show("It appears that you have no configuration file, a new one will be generated when Colour Chimp exits", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (InvalidCastException)
-            {
-                // display
-                var result = MessageBox.Show("It appears that your configuration file is corrupted. Would you like to create a new configuration file now?", "Error", MessageBoxButton.YesNo, MessageBoxImage.Error);
-
-                // handle result
-                switch (result)
-                {
-                    case MessageBoxResult.Yes:
-                        {
-                            // reset all settings
-                            updateManifestProperties();
-
-                            break;
-                        }
-                }
+                Status = $"Exception caught loading settings from manifest: {e.Message}";
+                UpdateManifestProperties();
             }
         }
 
-        /// <summary>
-        /// Update all manifest properties
-        /// </summary>
-        private void updateManifestProperties()
+        private void UpdateManifestProperties()
         {
-            // set keep in foreground
             Settings.Default.KeepApplicationInForeground = Topmost;
-
-            // set columns
             Settings.Default.Columns = (int)FixedColumns;
-
-            // set if maxing out
             Settings.Default.UseMaximumAlphaOnPreview = MaxOutAlphaOnPreview;
-
-            // set grid mode property
             Settings.Default.GridMode = GridMode.ToString();
-
-            // set repetition pause property
             Settings.Default.ColorSpace = ColorSpace.ToString();
-
-            // save settings
             Settings.Default.Save();
         }
 
         /// <summary>
-        /// Clear all colors from the grid
+        /// Clear all colors from the grid.
         /// </summary>
         public void Clear()
         {
-            // if some children
-            if (coloursGrid.Children.Count > 0)
-            {
-                // get rectangles
-                var rectangles = new List<Rectangle>(coloursGrid.Children.Cast<Rectangle>());
+            if (coloursGrid.Children.Count == 0)
+                return;
 
-                // itterate all children
-                foreach (var r in rectangles)
-                    // remove
-                    removeRectangle(r);
+            var rectangles = new List<Rectangle>(coloursGrid.Children.Cast<Rectangle>());
 
-                // set status
-                Status = "All colours cleared";
-            }
+            foreach (var r in rectangles)
+                RemoveRectangle(r);
+
+            Status = "All colours cleared";
         }
 
         /// <summary>
-        /// Clear the last color from the grid
+        /// Clear the last color from the grid.
         /// </summary>
         public void ClearLast()
         {
-            // check for children
-            if (coloursGrid.Children.Count > 0)
-                // remove last
-                removeRectangle(coloursGrid.Children[coloursGrid.Children.Count - 1] as Rectangle);
+            if (coloursGrid.Children.Count == 0)
+                return;
+
+            RemoveRectangle(coloursGrid.Children[coloursGrid.Children.Count - 1] as Rectangle);
         }
 
-        /// <summary>
-        /// Show the export dialog
-        /// </summary>
-        private void showExportDialog()
+        private void ShowExportDialog()
         {
-            // create dialog
-            var sFD = new SaveFileDialog();
+            var sFD = new SaveFileDialog
+            {
+                Title = "Export image as...",
+                OverwritePrompt = true,
+                DefaultExt = "*.bmp",
+                Filter = "24-bit Bitmap (*.bmp)|*.bmp|GIF (*.gif)|*.gif|JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|TIFF (*.tif)|*.tif",
+                InitialDirectory = defaultPath
+            };
 
-            // set title
-            sFD.Title = "Export image as...";
-
-            // show overwrite prompts
-            sFD.OverwritePrompt = true;
-
-            // default extension
-            sFD.DefaultExt = "*.bmp";
-
-            // view extensions
-            sFD.Filter = "24-bit Bitmap (*.bmp)|*.bmp|GIF (*.gif)|*.gif|JPEG (*.jpg)|*.jpg|PNG (*.png)|*.png|TIFF (*.tif)|*.tif";
-
-            // set location
-            sFD.InitialDirectory = defaultPath;
-
-            // ok accepted
             sFD.FileOk += sFD_FileOk;
-
-            // show
             sFD.ShowDialog();
         }
 
-        /// <summary>
-        /// Show the import dialog
-        /// </summary>
-        private void showImportDialog()
+        private void ShowImportDialog()
         {
-            // create dialog
-            var oFD = new OpenFileDialog();
+            var oFD = new OpenFileDialog
+            {
+                Title = "Import an image...", 
+                DefaultExt = "*.png", 
+                Filter = "Image files (*.bmp, *.gif, *.jpg, *.png, *.tif)|*.bmp;*.gif;*.jpg;*.png;*.tif;", 
+                InitialDirectory = defaultPath
+            };
 
-            // set title
-            oFD.Title = "Import a image...";
-
-            // default extension
-            oFD.DefaultExt = "*.png";
-
-            // view extensions
-            oFD.Filter = "Image files (*.bmp, *.gif, *.jpg, *.png, *.tif)|*.bmp;*.gif;*.jpg;*.png;*.tif;";
-
-            // set location
-            oFD.InitialDirectory = defaultPath;
-
-            // ok accepted
             oFD.FileOk += oFD_FileOk;
-
-            // show
             oFD.ShowDialog();
         }
 
-        /// <summary>
-        /// Export a patchwork of the grid as a png
-        /// </summary>
-        /// <param name="path">The path of the new file</param>
-        /// <returns>The status of the export</returns>
-        public bool ExportPatchworkAsPNG(string path)
+        private bool ExportPatchwork(string path)
         {
-            // hold background
             var background = coloursGrid.Background;
 
             try
             {
-                // set status
                 Status = $"Exporting to {path}...";
-
-                // hold colour count
                 var count = (int)ColorCount;
-
-                // get square root of colours
                 var sqr = (int)Math.Ceiling(Math.Sqrt(count));
-
-                // create a bitmap
-                var opBMP = new Bitmap(sqr, sqr);
-
-                // get all rectangles in the grid
+                var image = new Bitmap(sqr, sqr);
                 var rectangles = coloursGrid.Children.OfType<Rectangle>().ToArray();
-
-                // hold index
                 var rectangleIndex = 0;
 
-                // itterate rows
                 for (var row = 0; row < sqr; row++)
-                    // itterate columns
-                for (var column = 0; column < sqr; column++)
                 {
-                    // if a colour
-                    if (rectangleIndex < count)
+                    for (var column = 0; column < sqr; column++)
                     {
-                        // get rectangle at index
-                        var r = rectangles[rectangleIndex];
-
-                        // if a solid fil
-                        if (r.Fill is SolidColorBrush)
+                        if (rectangleIndex < count)
                         {
-                            // get brush
-                            var brush = r.Fill as SolidColorBrush;
+                            var r = rectangles[rectangleIndex];
 
-                            // set pixel
-                            opBMP.SetPixel(column, row, System.Drawing.Color.FromArgb(brush.Color.A, brush.Color.R, brush.Color.G, brush.Color.B));
+                            if (r.Fill is SolidColorBrush)
+                            {
+                                var brush = r.Fill as SolidColorBrush;
+
+                                if (brush == null)
+                                    continue;
+
+                                image.SetPixel(column, row, System.Drawing.Color.FromArgb(brush.Color.A, brush.Color.R, brush.Color.G, brush.Color.B));
+                            }
                         }
+                        else
+                        {
+                            image.SetPixel(column, row, System.Drawing.Color.Transparent);
+                        }
+                        rectangleIndex++;
                     }
-                    else
-                    {
-                        // set pixel to transparent
-                        opBMP.SetPixel(column, row, System.Drawing.Color.Transparent);
-                    }
-
-                    // increment index
-                    rectangleIndex++;
                 }
-
-                // hold format
+                
                 ImageFormat format;
 
-                // get ext
-                var ext = path.Substring(path.Length - 3);
+                if (path.EndsWith(".png", true, CultureInfo.InvariantCulture))
+                    format = ImageFormat.Png;
+                else if (path.EndsWith(".tif", true, CultureInfo.InvariantCulture) || path.EndsWith(".tiff", true, CultureInfo.InvariantCulture))
+                    format = ImageFormat.Tiff;
+                else if (path.EndsWith(".jpg", true, CultureInfo.InvariantCulture) || path.EndsWith(".jpeg", true, CultureInfo.InvariantCulture))
+                    format = ImageFormat.Jpeg;
+                else if (path.EndsWith(".gif", true, CultureInfo.InvariantCulture) || path.EndsWith(".giff", true, CultureInfo.InvariantCulture))
+                    format = ImageFormat.Gif;
+                else
+                    format = ImageFormat.Bmp;
 
-                // select extension
-                switch (ext.ToUpper())
-                {
-                    case "BMP":
-                        {
-                            // set format
-                            format = ImageFormat.Bmp;
-
-                            break;
-                        }
-                    case "GIF":
-                        {
-                            // set format
-                            format = ImageFormat.Gif;
-
-                            break;
-                        }
-                    case "JPG":
-                        {
-                            // set format
-                            format = ImageFormat.Jpeg;
-
-                            break;
-                        }
-                    case "PNG":
-                        {
-                            // set format
-                            format = ImageFormat.Png;
-
-                            break;
-                        }
-                    case "TIF":
-                        {
-                            // set format
-                            format = ImageFormat.Tiff;
-
-                            break;
-                        }
-                    default:
-                        {
-                            // not implemented yet
-                            throw new NotImplementedException();
-                        }
-                }
-
-                // save bmp
-                opBMP.Save(path, format);
-
-                #region RenderedBitmap
-
-                /*
-                // save current canvas transform
-                Transform transform = this.coloursGrid.LayoutTransform;
-
-                // reset current transform incase of scalling or rotating
-                this.coloursGrid.LayoutTransform = null;
-
-                // set background so that we have a solid, non transparent base
-                this.coloursGrid.Background = Brushes.White;
-
-                // get size of canvas
-                Size size = new Size(this.coloursGrid.ActualWidth, this.coloursGrid.ActualHeight);
-
-                // measure and arrange the canvas
-                this.coloursGrid.Measure(size);
-
-                // arrange the surface - this line is what causes the transition jitter...
-                this.coloursGrid.Arrange(new Rect(size));
-
-                // craete and render surface and push bitmap to it
-                RenderTargetBitmap renderBitmap = new RenderTargetBitmap((Int32)size.Width, (Int32)size.Height, 96d, 96d, PixelFormats.Pbgra32);
-
-                // now render surface to bitmap
-                renderBitmap.Render(this.coloursGrid);
-
-                // hold encoder
-                BitmapEncoder encoder = null;
-
-                // get ext
-                String ext = path.Substring(path.Length - 3);
-
-                // select extension
-                switch (ext.ToUpper())
-                {
-                    case ("BMP"):
-                        {
-                            // create encoder
-                            encoder = new BmpBitmapEncoder();
-
-                            break;
-                        }
-                    case ("GIF"):
-                        {
-                            // create encoder
-                            encoder = new GifBitmapEncoder();
-
-                            break;
-                        }
-                    case ("JPG"):
-                        {
-                            // create encoder
-                            encoder = new JpegBitmapEncoder();
-
-                            break;
-                        }
-                    case ("PNG"):
-                        {
-                            // create encoder
-                            encoder = new PngBitmapEncoder();
-
-                            break;
-                        }
-                    case ("TIF"):
-                        {
-                            // create encoder
-                            encoder = new TiffBitmapEncoder();
-
-                            break;
-                        }
-                    default:
-                        {
-                            // not implemented yet
-                            throw new NotImplementedException();
-                        }
-                }
-
-                // puch rendered bitmap into it
-                encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
-
-                // set source of image as frame
-                BitmapFrame image = encoder.Frames[0];
-
-                // restore previously saved layout
-                this.coloursGrid.LayoutTransform = transform;
-
-                // create stream
-                FileStream stream = new FileStream(path, FileMode.Create);
-
-                // save the file
-                encoder.Save(stream);
-
-                // ensure closed
-                stream.Close();
-
-                // release stream
-                stream = null;
-
-                // release encoder
-                encoder = null;
-
-                */
-
-                #endregion
-
-                // set status
+                image.Save(path, format);
                 Status = $"Exported to: {path}";
-
-                // pass
                 return true;
             }
             catch (Exception e)
             {
-                // display
-                MessageBox.Show($"An error occured while saving the file: {e.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                // set status
+                MessageBox.Show($"An error occurred while saving the file: {e.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Status = "Export failed";
-
-                // fail
                 return false;
             }
             finally
             {
-                // reset background
                 coloursGrid.Background = background;
             }
         }
 
-        /// <summary>
-        /// Import an image
-        /// </summary>
-        /// <param name="path">The path of the image to open</param>
-        public void ImportImage(string path)
+        private void ImportImage(string path)
         {
-            // open file
-
             try
             {
-                // get ext
                 var ext = path.Substring(path.Length - 3);
-
-                // hold decoder
-                BitmapDecoder decoder = null;
-
-                // create encoder for re-encoding of image
+                BitmapDecoder decoder;
                 BitmapEncoder encoder;
-
-                // set status
                 Status = $"Importing {path}...";
 
-                // select extension
                 switch (ext.ToUpper())
                 {
                     case "BMP":
-                        {
-                            // create decoder
-                            decoder = new BmpBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-
-                            // create reencoder
-                            encoder = new BmpBitmapEncoder();
-
-                            break;
-                        }
+                        decoder = new BmpBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                        encoder = new BmpBitmapEncoder();
+                        break;
                     case "GIF":
-                        {
-                            // create decoder
-                            decoder = new GifBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-
-                            // create reencoder
-                            encoder = new GifBitmapEncoder();
-
-                            break;
-                        }
+                        decoder = new GifBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                        encoder = new GifBitmapEncoder();
+                        break;
                     case "JPG":
-                        {
-                            // create decoder
-                            decoder = new JpegBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-
-                            // create reencoder
-                            encoder = new JpegBitmapEncoder();
-
-                            break;
-                        }
+                        decoder = new JpegBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                        encoder = new JpegBitmapEncoder();
+                        break;
                     case "PNG":
-                        {
-                            // create decoder
-                            decoder = new PngBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-
-                            // create reencoder
-                            encoder = new PngBitmapEncoder();
-
-                            break;
-                        }
+                        decoder = new PngBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                        encoder = new PngBitmapEncoder();
+                        break;
                     case "TIF":
-                        {
-                            // create decoder
-                            decoder = new TiffBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-
-                            // create reencoder
-                            encoder = new TiffBitmapEncoder();
-
-                            break;
-                        }
+                        decoder = new TiffBitmapDecoder(new Uri(path, UriKind.Absolute), BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                        encoder = new TiffBitmapEncoder();
+                        break;
                     default:
-                        {
-                            // not implemented yet
-                            throw new NotImplementedException();
-                        }
+                        throw new NotImplementedException();
                 }
 
-                // get frame
                 var frame = decoder.Frames[0];
-
-                // add the image as a frame
                 encoder.Frames.Add(frame);
 
-                // holds the image in a stream
                 var imageInStream = new MemoryStream();
-
-                // save to stream
                 encoder.Save(imageInStream);
 
-                // create the old scool win forms bitmap
                 var winFormsBitmap = new Bitmap(imageInStream);
-
-                // open file
-                gatherAllPixelsInROI(0, 0, winFormsBitmap.Height, winFormsBitmap.Width, winFormsBitmap);
-
-                // close the stream
+                GatherAllPixelsInROI(0, 0, winFormsBitmap.Height, winFormsBitmap.Width, winFormsBitmap);
                 imageInStream.Close();
 
-                // release stream
-                imageInStream = null;
-
-                // release encoder
-                encoder = null;
-
-                // set status
                 Status = "Import complete";
             }
             catch (Exception e)
             {
-                // display
                 MessageBox.Show($"There was an error importing the image: {e.Message}", "Import Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
-                // set status
                 Status = "Import failed";
             }
         }
 
-        /// <summary>
-        /// Begin color picking
-        /// </summary>
-        private void beginColorPicking()
+        private void BeginColorPicking()
         {
-            // color picking
             Mode = Mode.Pipette;
-
-            // get the desktop
             var bmp = GetVirtualScreenBitmap();
+            bool wasError;
 
-            // hold if there was an error
-            var wasError = false;
-
-            // queue callback
             ThreadPool.QueueUserWorkItem(state =>
             {
                 do
                 {
                     // keep going while mouse down or modifier key down and no error
 
-                    // update picking
-                    wasError = !(bool)Dispatcher.Invoke(new BitmapCallback(updateColorToPixelAtCurrentPoint), bmp);
+                    wasError = !(bool)Dispatcher.Invoke(new UpdatePixelCallback(UpdateColorToPixelAtCurrentPoint), bmp);
 
-                    // if no error
                     if (!wasError)
-                        // wait to keep sampling down
                         Thread.Sleep(10);
-                } while ((System.Windows.Forms.Control.MouseButtons == System.Windows.Forms.MouseButtons.Left || System.Windows.Forms.Control.ModifierKeys == colorSelectionModesModifierKey) &&
-                         !wasError);
 
-                // if errored out
+                } while ((System.Windows.Forms.Control.MouseButtons == MouseButtons.Left || System.Windows.Forms.Control.ModifierKeys == ColorSelectionModesModifierKey) && !wasError);
+
                 if (wasError)
-                    // dispatch update
-                    Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                    {
-                        // display error to user only
-                        MessageBox.Show("There was an error picking the colour", "Pick Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }));
+                    Dispatcher.Invoke(() => MessageBox.Show("There was an error picking the colour", "Pick Error", MessageBoxButton.OK, MessageBoxImage.Error));
 
-                // handle end of picking
-                Dispatcher.BeginInvoke(new LambdaCallback(() => Mode = Mode.Add));
+                Dispatcher.Invoke(() => Mode = Mode.Add);
             }, bmp);
         }
 
-        /// <summary>
-        /// Get the mouse position over the virtual screen
-        /// </summary>
-        /// <returns></returns>
-        private Point getCurrentMousePositionOverVirtualScreen()
+        private Point GetCurrentMousePositionOverVirtualScreen()
         {
-            // get point
-            Point p = System.Windows.Forms.Control.MousePosition;
-
-            // translate
+            var p = System.Windows.Forms.Control.MousePosition;
             p.X += Math.Abs(SystemInformation.VirtualScreen.Left);
             p.Y += Math.Abs(SystemInformation.VirtualScreen.Top);
 
-            // return translated pos
             return p;
         }
 
-        /// <summary>
-        /// Get a bitmap of the entire virtual sceen area
-        /// </summary>
-        /// <returns></returns>
-        public Bitmap GetVirtualScreenBitmap()
+        private Bitmap GetVirtualScreenBitmap()
         {
             // determine the size of the "virtual screen", which includes all monitor
-            int screenLeft = SystemInformation.VirtualScreen.Left;
-            int screenTop = SystemInformation.VirtualScreen.Top;
-            int screenWidth = SystemInformation.VirtualScreen.Width;
-            int screenHeight = SystemInformation.VirtualScreen.Height;
+            var screenLeft = SystemInformation.VirtualScreen.Left;
+            var screenTop = SystemInformation.VirtualScreen.Top;
+            var screenWidth = SystemInformation.VirtualScreen.Width;
+            var screenHeight = SystemInformation.VirtualScreen.Height;
 
-            // create a bitmap of the appropriate size to receive the screenshot
+            // create a bitmap of the appropriate size to receive the screen shot
             var bmp = new Bitmap(screenWidth, screenHeight);
 
-            // draw the screenshot into our bitmap
+            // draw the screen shot into the bitmap
             using (var g = Graphics.FromImage(bmp))
-            {
-                // copy graphics
                 g.CopyFromScreen(screenLeft, screenTop, 0, 0, bmp.Size);
-            }
 
-            // return bitmap
             return bmp;
         }
 
-        /// <summary>
-        /// Get a bitmap of a region in the virtual sceen area
-        /// </summary>
-        /// <param name="region">The region over the screen to gather</param>
-        /// <returns></returns>
-        public Bitmap GetVirtualScreenBitmap(Int32Rect region)
+        private Bitmap GetVirtualScreenBitmap(Int32Rect region)
         {
-            // create a bitmap of the appropriate size to receive the screenshot
             var bmp = new Bitmap(region.Width, region.Height);
 
-            // draw the screenshot into our bitmap
             using (var g = Graphics.FromImage(bmp))
-            {
-                // copy graphics
                 g.CopyFromScreen(region.X, region.Y, 0, 0, bmp.Size);
-            }
 
-            // return bitmap
             return bmp;
         }
 
-        /// <summary>
-        /// Update the color to the pixel at the current point
-        /// </summary>
-        /// <param name="bmp">The bitmap to interrogate</param>
-        /// <returns>True if the operation passes, else false</returns>
-        private bool updateColorToPixelAtCurrentPoint(Bitmap bmp)
+        private bool UpdateColorToPixelAtCurrentPoint(Bitmap bmp)
         {
             try
             {
-                // if a bmp
-                if (bmp != null)
+                if (bmp == null) 
+                    return false;
+
+                var cursorPosition = GetCurrentMousePositionOverVirtualScreen();
+                var c = bmp.GetPixel(cursorPosition.X, cursorPosition.Y);
+
+                switch (ColorSpace)
                 {
-                    // get cursor position
-                    var cursorPosition = getCurrentMousePositionOverVirtualScreen();
+                    case ColorSpace.ARGB:
 
-                    // if a cursor position
-                    if (cursorPosition != null)
-                    {
-                        // get color
-                        var c = bmp.GetPixel(cursorPosition.X, cursorPosition.Y);
+                        Alpha = c.A;
+                        Red = c.R;
+                        Green = c.G;
+                        Blue = c.B;
 
-                        // if a color
-                        if (c != null)
-                        {
-                            // depends on color space
-                            switch (ColorSpace)
-                            {
-                                case ColorSpace.ARGB:
-                                    {
-                                        // set channels
-                                        Alpha = c.A;
-                                        Red = c.R;
-                                        Green = c.G;
-                                        Blue = c.B;
+                        break;
 
-                                        break;
-                                    }
-                                case ColorSpace.CMYK:
-                                    {
-                                        // get cmyk 
-                                        var cymkColor = rgb2cmykConverter.Convert(Color.FromArgb(c.A, c.R, c.G, c.B), typeof(CMYKColor), null, null) as CMYKColor;
+                    case ColorSpace.CMYK:
 
-                                        // update cmyk
-                                        Cyan = cymkColor.Cyan * 100;
-                                        Magenta = cymkColor.Magenta * 100;
-                                        Yellow = cymkColor.Yellow * 100;
-                                        K = cymkColor.Key * 100;
+                        var cymkColor = Color.FromArgb(c.A, c.R, c.G, c.B).ToCMYK();
+                        Cyan = cymkColor.Cyan * 100;
+                        Magenta = cymkColor.Magenta * 100;
+                        Yellow = cymkColor.Yellow * 100;
+                        K = cymkColor.Key * 100;
 
-                                        break;
-                                    }
-                                case ColorSpace.HSV:
-                                    {
-                                        // get hsv
-                                        var hsvColor = rgb2hsvConverter.Convert(Color.FromArgb(c.A, c.R, c.G, c.B), typeof(HSVColor), null, null) as HSVColor;
+                        break;
 
-                                        // update hsv
-                                        Hue = hsvColor.Hue * 100;
-                                        Saturation = hsvColor.Saturation * 100;
-                                        Value = hsvColor.Value * 100;
+                    case ColorSpace.HSV:
 
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        throw new NotImplementedException();
-                                    }
-                            }
+                        var hsvColor = Color.FromArgb(c.A, c.R, c.G, c.B).ToHSV();
+                        Hue = hsvColor.Hue * 100;
+                        Saturation = hsvColor.Saturation * 100;
+                        Value = hsvColor.Value * 100;
 
-                            // pass
-                            return true;
-                        }
-                    }
+                        break;
+
+                    default:
+                        throw new NotImplementedException();
                 }
 
-                // failure
-                return false;
-            }
-            catch (Exception)
-            {
-                // fail
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Increment a byte by 16
-        /// </summary>
-        /// <param name="b">The byte to increment</param>
-        /// <returns></returns>
-        private byte incrementByte(byte b)
-        {
-            // if less than 239
-            if (b < 239)
-                // increase
-                b += 10;
-            else
-                // max out
-                b = 255;
-
-            // return
-            return b;
-        }
-
-        /// <summary>
-        /// Deincrement a byte by 16
-        /// </summary>
-        /// <param name="b">The byte to deincrement</param>
-        /// <returns></returns>
-        private byte deincrementByte(byte b)
-        {
-            // if above 15
-            if (b > 15)
-                // decrease
-                b -= 16;
-            else
-                // min out
-                b = 0;
-
-            // return
-            return b;
-        }
-
-        /// <summary>
-        /// Increment a double by 10
-        /// </summary>
-        /// <param name="d">The double to increment</param>
-        /// <returns></returns>
-        private double incrementDouble(double d)
-        {
-            // if less than 90
-            if (d < 90)
-                // increase
-                d += 10;
-            else
-                // max out
-                d = 100;
-
-            // return
-            return d;
-        }
-
-        /// <summary>
-        /// Deincrement a double by 10
-        /// </summary>
-        /// <param name="d">The double to deincrement</param>
-        /// <returns></returns>
-        private double deincrementDouble(double d)
-        {
-            // if above 10
-            if (d > 10)
-                // decrease
-                d -= 10;
-            else
-                // min out
-                d = 0;
-
-            // return
-            return d;
-        }
-
-        /// <summary>
-        /// Capture all pixels in a selected region of interest
-        /// </summary>
-        /// <param name="top">The top coordinate</param>
-        /// <param name="left">
-        /// <The left coordinate
-        /// </param>
-        /// <param name="bottom">The bottom coordinate</param>
-        /// <param name="right">The right coordinate</param>
-        private void gatherAllPixelsInROI(int top, int left, int bottom, int right)
-        {
-            try
-            {
-                // get the desktop
-                var bmp = GetVirtualScreenBitmap();
-
-                // gather
-                gatherAllPixelsInROI(top, left, bottom, right, bmp);
+                return true;
             }
             catch (Exception e)
             {
-                // display error to user only
-                MessageBox.Show($"There was an error gathering screen region pixels {e.Message}", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                Status = $"Failed to update to colour: {e.Message}";
+                return false;
             }
         }
 
-        /// <summary>
-        /// Capture all pixels in a selected region of interest
-        /// </summary>
-        /// <param name="top">The top coordinate</param>
-        /// <param name="left">The left coordinate</param>
-        /// <param name="bottom">The bottom coordinate</param>
-        /// <param name="right">The right coordinate</param>
-        /// <param name="bitmap">The bitmap to gather from</param>
-        private void gatherAllPixelsInROI(int top, int left, int bottom, int right, Bitmap bitmap)
+        private byte IncrementByte(byte b)
+        {
+            if (b < 239)
+                b += 16;
+            else
+                b = 255;
+
+            return b;
+        }
+
+        private byte DeincrementByte(byte b)
+        {
+            if (b > 15)
+                b -= 16;
+            else
+                b = 0;
+
+            return b;
+        }
+
+        private double IncrementDouble(double d)
+        {
+            if (d < 90)
+                d += 10;
+            else
+                d = 100;
+
+            return d;
+        }
+
+        private double DecrementDouble(double d)
+        {
+            if (d > 9)
+                d -= 10;
+            else
+                d = 0;
+
+            return d;
+        }
+
+        private void GatherAllPixelsInROI(int top, int left, int bottom, int right)
         {
             try
             {
-                // set staus
+                var bmp = GetVirtualScreenBitmap();
+                GatherAllPixelsInROI(top, left, bottom, right, bmp);
+            }
+            catch (Exception e)
+            {
+                Status = $"There was an error gathering screen region pixels {e.Message}";
+            }
+        }
+
+        private void GatherAllPixelsInROI(int top, int left, int bottom, int right, Bitmap bitmap)
+        {
+            try
+            {
                 Status = "Beginning screen region gather...";
 
-                // if gatherer running
-                if (roiGatherWorker != null)
-                    // cancel
-                    roiGatherWorker.CancelAsync();
+                roiGatherWorker?.CancelAsync();
 
-                // create new worker
-                roiGatherWorker = new BackgroundWorker();
+                roiGatherWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
 
-                // support cancel
-                roiGatherWorker.WorkerSupportsCancellation = true;
-
-                // not idle
                 AllBackgroundOperationsIdle = false;
 
-                // set worker work handler
                 roiGatherWorker.DoWork += (sender, args) =>
                 {
-                    // get the bmp from the argument property of the event args
                     var capture = args.Argument as Bitmap;
-
-                    // holds list of pixels found
                     var pixels = new List<string>();
-
-                    // hold percentage complete
-                    double percentageComplete = 0;
+                    double percentageComplete;
 
                     try
                     {
-                        // if incorrectly entered
                         if (right < left)
                         {
                             var temp = left;
@@ -1304,7 +792,6 @@ namespace BP.ColourChimp.Windows
                             right = temp;
                         }
 
-                        // if incorrectly entered
                         if (bottom < top)
                         {
                             var temp = top;
@@ -1312,1628 +799,836 @@ namespace BP.ColourChimp.Windows
                             bottom = temp;
                         }
 
-                        // create new size
                         var size = new Size(right - left, bottom - top);
 
-                        // itterate all rows
                         for (var row = top; row < bottom; row++)
                         {
-                            // itterate all columns
                             for (var column = left; column < right; column++)
-                                // if not cancelled
-                                if (!roiGatherWorker.CancellationPending)
-                                {
-                                    // get pixel
-                                    var pixel = bitmap.GetPixel(column, row);
-
-                                    // hold id of pixel
-                                    var id = $"{pixel.A}{pixel.R}{pixel.G}{pixel.B}";
-
-                                    // if color not already used
-                                    if (!pixels.Contains(id))
-                                        // invoke adding of colour on UI thread
-                                        Dispatcher.Invoke(new LambdaCallback(() =>
-                                        {
-                                            // add color
-                                            addColor(Color.FromArgb(pixel.A, pixel.R, pixel.G, pixel.B));
-
-                                            // add id
-                                            pixels.Add(id);
-                                        }), DispatcherPriority.Background);
-                                }
-                                else
-                                {
-                                    // return thread
+                            {
+                                if (roiGatherWorker.CancellationPending)
                                     return;
+
+                                var pixel = bitmap.GetPixel(column, row);
+                                var id = $"{pixel.A}{pixel.R}{pixel.G}{pixel.B}";
+
+                                if (!pixels.Contains(id))
+                                {
+                                    Dispatcher.Invoke(() =>
+                                    {
+                                        AddColor(Color.FromArgb(pixel.A, pixel.R, pixel.G, pixel.B));
+                                        pixels.Add(id);
+                                    }, DispatcherPriority.Background);
                                 }
 
-                            // update percentage
-                            percentageComplete = 100d / size.Height * (row - top);
-
-                            // update status
-                            Dispatcher.Invoke(new LambdaCallback(() => Status = $"Gathering colors in ROI {Math.Round(percentageComplete, 1)}% complete, row {row + 1 - top} of {size.Height}"), DispatcherPriority.Normal);
+                                percentageComplete = 100d / size.Height * (row - top);
+                                Dispatcher.Invoke(() => Status = $"Gathering colors in ROI {Math.Round(percentageComplete, 1)}% complete, row {row + 1 - top} of {size.Height}", DispatcherPriority.Normal);
+                            }
                         }
                     }
                     catch (ArgumentException)
                     {
-                        // just display
-                        Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                        {
-                            // display error to user only, probably window is minimized
-                            MessageBox.Show("Screen region is not valid. Check that window is not minimized", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }));
+                        Dispatcher.Invoke(() => MessageBox.Show("Screen region is not valid. Check that window is not minimized", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error));
                     }
                     catch (Exception e)
                     {
-                        // just display
-                        Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                        {
-                            // display error to user only
-                            MessageBox.Show($"There was an error gathering screen region: {e.Message}", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        }));
+                        Dispatcher.Invoke(() => MessageBox.Show($"There was an error gathering screen region: {e.Message}", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error));
                     }
                     finally
                     {
-                        // update status
-                        Dispatcher.Invoke(new LambdaCallback(() => Status = $"Screen region gather finished, {pixels.Count} colours were found"));
-
-                        // release worker
                         roiGatherWorker = null;
-
-                        // set if all operations are idle
-                        Dispatcher.Invoke(new LambdaCallback(() => AllBackgroundOperationsIdle = getIfAllBackgroundOperationsAreComplete()));
+                        Dispatcher.Invoke(() =>
+                        {
+                            Status = $"Screen region gather finished, {pixels.Count} colours were found";
+                            AllBackgroundOperationsIdle = GetIfAllBackgroundOperationsAreComplete();
+                        });
                     }
                 };
 
-                // do work to do ^
                 roiGatherWorker.RunWorkerAsync(bitmap);
             }
             catch (Exception e)
             {
-                // display error to user only
-                MessageBox.Show($"There was an error gathering screen reigion: {e.Message}", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"There was an error gathering screen region: {e.Message}", "Gather Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        /// <summary>
-        /// Get if all background operations are complete
-        /// </summary>
-        /// <returns></returns>
-        private bool getIfAllBackgroundOperationsAreComplete()
+        private bool GetIfAllBackgroundOperationsAreComplete()
         {
-            return colorArangmentWorker == null &&
-                   roiGatherWorker == null;
+            return colorSorterWorker == null && roiGatherWorker == null;
         }
 
-        /// <summary>
-        /// Add a color to the display
-        /// </summary>
-        /// <param name="color">The color to add</param>
-        private void addColor(Color color)
+        private void AddColor(Color color)
         {
             try
             {
-                // create shape
-                var r = new Rectangle();
+                var r = new Rectangle { Fill = new SolidColorBrush(color) };
 
-                // set colour from argb bytes
-                r.Fill = new SolidColorBrush(color);
-
-                // select mode
                 switch (GridMode)
                 {
                     case GridMode.FitToArea:
-                        {
-                            // pull style from resources
-                            //r.Style = this.coloursGrid.FindResource("sizeableRectangleStyle") as Style;
-
-                            break;
-                        }
+                        break;
                     case GridMode.MaintainSize:
-                        {
-                            // pull style from resources
-                            r.Style = coloursGrid.FindResource("squareRectangleStyle") as Style;
-
-                            break;
-                        }
+                        r.Style = coloursGrid.FindResource("squareRectangleStyle") as Style;
+                        break;
                     default:
-                        {
-                            throw new NotImplementedException();
-                        }
+                        throw new NotImplementedException();
                 }
 
-                // add the child
                 coloursGrid.Children.Add(r);
-
-                // increment count
                 ColorCount++;
-
-                // has atleast a child color
                 HasChildrenColors = true;
             }
             catch (Exception)
             {
-                // display
                 MessageBox.Show("Cannot add colour, check values are entered in a correct hex format", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        /// <summary>
-        /// Remove a rectangle from the display
-        /// </summary>
-        /// <param name="rectangle">The rectangle to remove</param>
-        private void removeRectangle(Rectangle rectangle)
+        private void RemoveRectangle(Rectangle rectangle)
         {
             try
             {
-                // remove the child
                 coloursGrid.Children.Remove(rectangle);
-
-                // increment count
                 ColorCount--;
-
-                // check it atleast a child color
                 HasChildrenColors = coloursGrid.Children.Count > 0;
             }
             catch (Exception)
             {
-                // display
                 MessageBox.Show("Cannot remove rectangle, check rectangle is part of the grid", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
-        /// <summary>
-        /// Sort all colors
-        /// </summary>
-        /// <param name="sortMethod">The sort method to use</param>
-        private void sortColors(Comparison<Rectangle> sortMethod)
+        private void SortColors(Comparison<Rectangle> sortMethod)
         {
-            // sorting colors
             Mode = Mode.Sort;
-
-            // if sorter running
-            if (colorArangmentWorker != null)
-                // cancel
-                colorArangmentWorker.CancelAsync();
-
-            // create new worker
-            colorArangmentWorker = new BackgroundWorker();
-
-            // support cancel
-            colorArangmentWorker.WorkerSupportsCancellation = true;
-
-            // not idle
             AllBackgroundOperationsIdle = false;
-
-            // get the children
             var rectangleCollection = coloursGrid.Children;
 
-            // set worker work handler
-            colorArangmentWorker.DoWork += (sender, args) =>
+            colorSorterWorker?.CancelAsync();
+            colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
+            colorSorterWorker.DoWork += (sender, args) =>
             {
                 try
                 {
-                    // here we need to sort the colors as best we can. this is never going to be perfect
-
-                    // if no collection of rectangles
-                    if (!(args.Argument is UIElementCollection)) throw new ArgumentException("No colours were provided for the sort");
-
-                    // get collection
                     var collection = args.Argument as UIElementCollection;
 
-                    // hold sort list
-                    var sortList = new List<Rectangle>();
-
-                    // invoke on dispatcher
-                    Dispatcher.Invoke(new LambdaCallback(() =>
-                    {
-                        // the sort is going to be overall dark to light
-                        foreach (var o in collection)
-                            // if a rectangle
-                            if (o is Rectangle)
-                                // add rectangle to list
-                                sortList.Add(o as Rectangle);
-                    }), DispatcherPriority.Background);
-
-                    // if not cancelling
-                    if (!colorArangmentWorker.CancellationPending)
-                        // invoke sort
-                        Dispatcher.Invoke(new LambdaCallback(() =>
-                        {
-                            try
-                            {
-                                // sort
-                                sortList.Sort(sortMethod);
-                            }
-                            catch (ArgumentException)
-                            {
-                                // this is probally the sort algorhythm
-                                Console.WriteLine("Exception caught sorting rectangles. If the randomize sort method was used this could be because a 0 was never returned and should be ignored");
-                            }
-                        }), DispatcherPriority.Background);
-                    else
-                        // return thread
+                    if (collection == null)
                         return;
 
-                    // itterate all rectangles
-                    for (var index = 0; index < sortList.Count; index++)
-                        // if not cancelling
-                        if (!colorArangmentWorker.CancellationPending)
-                            // invoke update
-                            Dispatcher.Invoke(new LambdaCallback(() =>
-                            {
-                                // remove rectangle
-                                coloursGrid.Children.Remove(sortList[index]);
+                    var sortList = new List<Rectangle>();
 
-                                // add at colour index
-                                coloursGrid.Children.Insert(index, sortList[index]);
-                            }), DispatcherPriority.Background);
-                        else
-                            // return thread
+                    // add all rectangles
+                    Dispatcher.Invoke(() => sortList.AddRange(collection.OfType<Rectangle>().Select(o => o)));
+
+                    if (!colorSorterWorker.CancellationPending)
+                        Dispatcher.Invoke(() => sortList.Sort(sortMethod));
+                    else
+                        return;
+
+                    for (var index = 0; index < sortList.Count; index++)
+                    {
+                        if (colorSorterWorker.CancellationPending)
                             return;
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            coloursGrid.Children.Remove(sortList[index]);
+                            coloursGrid.Children.Insert(index, sortList[index]);
+                        });
+                    }
                 }
                 catch (Exception e)
                 {
-                    // just display
-                    Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                    {
-                        // display error to user only
-                        MessageBox.Show($"There was an error sorting colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }));
+                    Dispatcher.Invoke(() => MessageBox.Show($"There was an error sorting colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error));
                 }
                 finally
                 {
-                    // begin invoke
-                    Dispatcher.Invoke(new LambdaCallback(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        // update status
                         Status = "Colour sort finished";
-
-                        // release worker
-                        colorArangmentWorker = null;
-
-                        // not sorting
+                        colorSorterWorker = null;
                         Mode = defaultMode;
-
-                        // set if all operations are idle
-                        AllBackgroundOperationsIdle = getIfAllBackgroundOperationsAreComplete();
-                    }));
+                        AllBackgroundOperationsIdle = GetIfAllBackgroundOperationsAreComplete();
+                    });
                 }
             };
 
-            // do work to do ^
-            colorArangmentWorker.RunWorkerAsync(rectangleCollection);
+            colorSorterWorker.RunWorkerAsync(rectangleCollection);
         }
 
-        /// <summary>
-        /// Populate the windows sub menu with all open windows
-        /// </summary>
-        private void populateWindowsSubMenuWithOpenWindows()
+        private void PopulateWindowsSubMenuWithOpenWindows()
         {
-            // gather all processes so we can obtain windows...
-
-            // clear all window names
             gatherFromWindowMenuItem.Items.Clear();
 
-            // get all processes
             var procs = Process.GetProcesses();
 
-            // itterate all processes
             foreach (var proc in procs)
-                // if handle
-                if (proc.MainWindowHandle != IntPtr.Zero)
-                {
-                    // dynamicaly build menu
+            {
+                if (proc.MainWindowHandle == IntPtr.Zero)
+                    continue;
 
-                    // add
-                    var windowNameItem = new MenuItem();
+                var windowNameItem = new MenuItem { Header = proc.ProcessName };
+                windowNameItem.Click += windowNameItem_Click;
+                gatherFromWindowMenuItem.Items.Add(windowNameItem);
+            }
 
-                    // set header
-                    windowNameItem.Header = proc.ProcessName;
-
-                    // allow click
-                    windowNameItem.Click += windowNameItem_Click;
-
-                    // add item to menu
-                    gatherFromWindowMenuItem.Items.Add(windowNameItem);
-                }
-
-            // set if enabled
             gatherFromWindowMenuItem.IsEnabled = gatherFromWindowMenuItem.Items.Count > 0;
         }
 
-        /// <summary>
-        /// Remove all duplicated colors
-        /// </summary>
-        public void RemoveDuplicateColors()
+        private void RemoveDuplicateColors()
         {
-            // filtering colors
             Mode = Mode.Filter;
-
-            // if filterer running
-            if (colorArangmentWorker != null)
-                // cancel
-                colorArangmentWorker.CancelAsync();
-
-            // create new worker
-            colorArangmentWorker = new BackgroundWorker();
-
-            // support cancel
-            colorArangmentWorker.WorkerSupportsCancellation = true;
-
-            // not idle
             AllBackgroundOperationsIdle = false;
-
-            // get the children
             var rectangleCollection = coloursGrid.Children;
 
-            // set worker work handler
-            colorArangmentWorker.DoWork += (sender, args) =>
+            colorSorterWorker?.CancelAsync();
+            colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
+
+            colorSorterWorker.DoWork += (sender, args) =>
             {
                 try
                 {
-                    // get collection
                     var collection = args.Argument as UIElementCollection;
 
-                    // hold rectangle dictionary
-                    var colorDictionary = new Dictionary<string, short>();
+                    if (collection == null)
+                        return;
 
-                    // hold all rectangles
+                    var colorDictionary = new Dictionary<string, short>();
                     var allRecatngles = new List<Rectangle>();
 
-                    // invoke on dispatcher
-                    Dispatcher.Invoke(new LambdaCallback(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        // itterate all objects in collesction
                         foreach (var o in collection)
                         {
-                            // if a rectangle
-                            if (o is Rectangle)
+                            if (o is Rectangle r)
                             {
-                                // get rectanagle
-                                var r = o as Rectangle;
-
-                                // if fill
-                                if (!(r.Fill is SolidColorBrush))
-                                    // throw exception
-                                    throw new Exception("Only rectangles with fills that are of type SolidColorBrush can be filtered");
-
-                                // get brush
                                 var brush = r.Fill as SolidColorBrush;
 
-                                // create key
+                                if (brush == null)
+                                    continue;
+
                                 var key = $"{brush.Color.A}{brush.Color.R}{brush.Color.G}{brush.Color.B}";
 
-                                // if key already exists
                                 if (colorDictionary.Keys.Contains(key))
-                                    // increment
                                     colorDictionary[key]++;
                                 else
-                                    // create new entry
                                     colorDictionary.Add(key, 1);
                             }
 
-                            // add rectangle
                             allRecatngles.Add(o as Rectangle);
                         }
-                    }), DispatcherPriority.Background);
+                    });
 
-                    // while still some keys
-                    while (colorDictionary.Keys.Count > 0)
-                        // if not cancelling
-                        if (!colorArangmentWorker.CancellationPending)
+                    while (colorDictionary.Keys.Any())
+                    {
+                        if (colorSorterWorker.CancellationPending)
+                            break;
+
+                        var key = colorDictionary.Keys.Last();
+
+                        if (colorDictionary[key] > 1)
                         {
-                            // get key
-                            var key = colorDictionary.Keys.ElementAt(colorDictionary.Keys.Count - 1);
+                            var toRemove = colorDictionary[key] - 1;
 
-                            // look up 
-                            if (colorDictionary[key] > 1)
+                            Dispatcher.Invoke(() =>
                             {
-                                // hold how many to remove
-                                var toRemove = colorDictionary[key] - 1;
-
-                                // invoke callback
-                                Dispatcher.Invoke(new LambdaCallback(() =>
+                                foreach (var r in allRecatngles)
                                 {
-                                    // itterate all rectangles again
-                                    foreach (var r in allRecatngles)
+                                    if (r.Fill is SolidColorBrush brush)
                                     {
-                                        // if a solid brush
-                                        if (r.Fill is SolidColorBrush)
+                                        if ($"{brush.Color.A}{brush.Color.R}{brush.Color.G}{brush.Color.B}" == key)
                                         {
-                                            // get brush
-                                            var brush = r.Fill as SolidColorBrush;
-
-                                            // if key matches
-                                            if ($"{brush.Color.A}{brush.Color.R}{brush.Color.G}{brush.Color.B}" == key)
-                                            {
-                                                // remove from GUI
-                                                removeRectangle(r);
-
-                                                // reduce left to remove
-                                                toRemove--;
-                                            }
+                                            RemoveRectangle(r);
+                                            toRemove--;
                                         }
-
-                                        // if a cancel pending, or just one left
-                                        if (toRemove == 0 ||
-                                            colorArangmentWorker.CancellationPending)
-                                            // break itteration
-                                            break;
                                     }
-                                }), DispatcherPriority.Background);
-                            }
 
-                            // remove key from dictionary
-                            colorDictionary.Remove(key);
+                                    if (toRemove == 0 || colorSorterWorker.CancellationPending)
+                                        break;
+                                }
+                            });
                         }
-                        else
-                        {
-                            // return thread
-                            return;
-                        }
+
+                        colorDictionary.Remove(key);
+                    }
                 }
                 catch (Exception e)
                 {
-                    // just display
-                    Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                    {
-                        // display error to user only
-                        MessageBox.Show($"There was an error removing duplicate colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }));
+                    Dispatcher.Invoke(() => MessageBox.Show($"There was an error removing duplicate colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error));
                 }
                 finally
                 {
                     // begin invoke
-                    Dispatcher.Invoke(new LambdaCallback(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        // update status
                         Status = "Colour filter finished";
-
-                        // release worker
-                        colorArangmentWorker = null;
-
-                        // not sorting
+                        colorSorterWorker = null;
                         Mode = defaultMode;
-
-                        // set if all operations are idle
-                        AllBackgroundOperationsIdle = getIfAllBackgroundOperationsAreComplete();
-                    }));
+                        AllBackgroundOperationsIdle = GetIfAllBackgroundOperationsAreComplete();
+                    });
                 }
             };
 
-            // do work to do ^
-            colorArangmentWorker.RunWorkerAsync(rectangleCollection);
+            colorSorterWorker.RunWorkerAsync(rectangleCollection);
         }
 
-        /// <summary>
-        /// Find the maximum difference between 3 colors
-        /// </summary>
-        /// <param name="colorA">Color a</param>
-        /// <param name="colorB">Color B</param>
-        /// <param name="colorC">Color c</param>
-        /// <returns>The maximum difference</returns>
-        private double findMaximumDifference(double colorA, double colorB, double colorC)
+        private double FindMaximumDifference(double colorA, double colorB, double colorC)
         {
-            // calculate max minus min
             return Math.Max(colorA, Math.Max(colorB, colorC)) - Math.Min(colorA, Math.Max(colorB, colorC));
         }
 
-        /// <summary>
-        /// Filter the colors using a specified mode
-        /// </summary>
-        /// <param name="mode">The mode to use</param>
-        /// <param name="dominance">The dominance value to use</param>
-        public void Filter(ChannelDominanceModes mode, double dominance)
+        private void Filter(ChannelDominanceModes mode, double dominance)
         {
-            // filtering colors
             Mode = Mode.Filter;
-
-            // if filterer running
-            if (colorArangmentWorker != null)
-                // cancel
-                colorArangmentWorker.CancelAsync();
-
-            // create new worker
-            colorArangmentWorker = new BackgroundWorker();
-
-            // support cancel
-            colorArangmentWorker.WorkerSupportsCancellation = true;
-
-            // not idle
             AllBackgroundOperationsIdle = false;
-
-            // get the children
             var rectangleCollection = coloursGrid.Children;
 
-            // set worker work handler
-            colorArangmentWorker.DoWork += (sender, args) =>
+            colorSorterWorker?.CancelAsync();
+            colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
+            colorSorterWorker.DoWork += (sender, args) =>
             {
                 try
                 {
-                    // here we need to sort the colors as best we can. this is never going to be perfect
+                    if (dominance > 1.0d || dominance < 0.0d) 
+                        throw new ArgumentException("Dominance is outside of normalised range (0.0 - 1.0)");
 
-                    // if no collection of rectangles
-                    if (!(args.Argument is UIElementCollection)) throw new ArgumentException("No colours were provided for the filter");
+                    if (!(args.Argument is UIElementCollection collection))
+                        return;
 
-                    // check dominance is normalised
-                    if (dominance > 1.0d || dominance < 0.0d) throw new ArgumentException("Dominance is outside of normalised range (0.0 - 1.0)");
-
-                    // get collection
-                    var collection = args.Argument as UIElementCollection;
-
-                    // hold sort list
                     var sortList = new List<Rectangle>();
-
-                    // hold all rectangle list
                     var allRectangleList = new List<Rectangle>();
 
-                    // invoke on dispatcher
-                    Dispatcher.Invoke(new LambdaCallback(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        // select mode
                         switch (mode)
                         {
                             case ChannelDominanceModes.DominantRGB:
                             case ChannelDominanceModes.NonDominantRGB:
-                                {
-                                    // get byte value of dominance
-                                    dominance = 255d / 100d * (dominance * 100d);
-
-                                    break;
-                                }
+                                dominance = 255d / 100d * (dominance * 100d);
+                                break;
                             case ChannelDominanceModes.DominantCMY:
                             case ChannelDominanceModes.NonDominantCMY:
                             case ChannelDominanceModes.Gray:
                             case ChannelDominanceModes.NonGray:
-                                {
-                                    // dominance remains
-
-                                    break;
-                                }
+                                // dominance remains
+                                break;
                             default:
-                                {
-                                    throw new NotImplementedException();
-                                }
+                                throw new NotImplementedException();
                         }
 
-                        // the sort is going to be overall dark to light
                         foreach (var o in collection)
-                            // if a rectangle
-                            if (o is Rectangle)
+                        {
+                            if (!(o is Rectangle))
+                                continue;
+
+                            var r = o as Rectangle;
+
+                            if (!(r.Fill is SolidColorBrush brush))
+                                return;
+                            switch (mode)
                             {
-                                // get rectanagle
-                                var r = o as Rectangle;
+                                case ChannelDominanceModes.DominantCMY:
 
-                                // if fill
-                                if (!(r.Fill is SolidColorBrush))
-                                    // throw exception
-                                    throw new Exception("Only rectangles with fills that are of type SolidColorBrush can be filtered");
+                                    var cmyk = brush.Color.ToCMYK();
 
-                                // select mode
-                                switch (mode)
-                                {
-                                    case ChannelDominanceModes.DominantCMY:
-                                        {
-                                            // create converter
-                                            IValueConverter rgbToCMYKConverter = new RGBToCMYKConverter();
+                                    if (FindMaximumDifference(cmyk.Cyan, cmyk.Magenta, cmyk.Yellow) < dominance)
+                                        sortList.Add(r);
 
-                                            // get color a
-                                            var colorA = rgbToCMYKConverter.Convert(((SolidColorBrush)r.Fill).Color, typeof(CMYKColor), null, null) as CMYKColor;
+                                    break;
 
-                                            // check for dominant channel
-                                            if (!(findMaximumDifference(colorA.Cyan, colorA.Magenta, colorA.Yellow) >= dominance))
-                                                // add rectangle to list
-                                                sortList.Add(r);
+                                case ChannelDominanceModes.DominantRGB:
 
-                                            break;
-                                        }
-                                    case ChannelDominanceModes.DominantRGB:
-                                        {
-                                            // get color a
-                                            var colorA = ((SolidColorBrush)r.Fill).Color;
+                                    if (FindMaximumDifference(brush.Color.R, brush.Color.G, brush.Color.B) >= dominance)
+                                        sortList.Add(r);
 
-                                            // check for dominant channel
-                                            if (!(findMaximumDifference(colorA.R, colorA.G, colorA.B) >= dominance))
-                                                // add rectangle to list
-                                                sortList.Add(r);
+                                    break;
 
-                                            break;
-                                        }
-                                    case ChannelDominanceModes.Gray:
-                                        {
-                                            // get color a
-                                            var colorA = ((SolidColorBrush)r.Fill).Color;
+                                case ChannelDominanceModes.Gray:
 
-                                            // check for a non-gray color
-                                            if (colorA.R != colorA.G || colorA.G != colorA.B || colorA.R != colorA.B)
-                                                // add rectangle to list
-                                                sortList.Add(r);
+                                    if (brush.Color.R != brush.Color.G || brush.Color.G != brush.Color.B)
+                                        sortList.Add(r);
 
-                                            break;
-                                        }
-                                    case ChannelDominanceModes.NonDominantCMY:
-                                        {
-                                            // create converter
-                                            IValueConverter rgbToCMYKConverter = new RGBToCMYKConverter();
+                                    break;
 
-                                            // get color a
-                                            var colorA = rgbToCMYKConverter.Convert(((SolidColorBrush)r.Fill).Color, typeof(CMYKColor), null, null) as CMYKColor;
+                                case ChannelDominanceModes.NonDominantCMY:
 
-                                            // check for dominant channel
-                                            if (findMaximumDifference(colorA.Cyan, colorA.Magenta, colorA.Yellow) >= dominance)
-                                                // add rectangle to list
-                                                sortList.Add(r);
+                                    var cmyk2 = brush.Color.ToCMYK();
 
-                                            break;
-                                        }
-                                    case ChannelDominanceModes.NonDominantRGB:
-                                        {
-                                            // get color a
-                                            var colorA = ((SolidColorBrush)r.Fill).Color;
+                                    if (FindMaximumDifference(cmyk2.Cyan, cmyk2.Magenta, cmyk2.Yellow) >= dominance)
+                                        sortList.Add(r);
 
-                                            // check for dominant channel
-                                            if (findMaximumDifference(colorA.R, colorA.G, colorA.B) >= dominance)
-                                                // add rectangle to list
-                                                sortList.Add(r);
+                                    break;
 
-                                            break;
-                                        }
+                                case ChannelDominanceModes.NonDominantRGB:
 
-                                    case ChannelDominanceModes.NonGray:
-                                        {
-                                            // get color a
-                                            var colorA = ((SolidColorBrush)r.Fill).Color;
+                                    if (FindMaximumDifference(brush.Color.R, brush.Color.G, brush.Color.B) >= dominance)
+                                        sortList.Add(r);
 
-                                            // check for a gray color
-                                            if (colorA.R == colorA.G && colorA.G == colorA.B)
-                                                // add rectangle to list
-                                                sortList.Add(r);
+                                    break;
 
-                                            break;
-                                        }
+                                case ChannelDominanceModes.NonGray:
 
-                                    default:
-                                        {
-                                            throw new NotImplementedException();
-                                        }
-                                }
+                                    if (brush.Color.R == brush.Color.G && brush.Color.G == brush.Color.B)
+                                        sortList.Add(r);
 
-                                // add to all rectangle list
-                                allRectangleList.Add(o as Rectangle);
+                                    break;
+
+                                default:
+                                    throw new NotImplementedException();
                             }
-                    }), DispatcherPriority.Background);
 
-                    // itterate all rectangles
-                    for (var index = 0; index < allRectangleList.Count; index++)
-                        // if not cancelling
-                        if (!colorArangmentWorker.CancellationPending)
-                            // invoke update
-                            Dispatcher.Invoke(new LambdaCallback(() =>
-                            {
-                                // if if sorted list does not contain the rectangle
-                                if (!sortList.Contains(allRectangleList[index]))
-                                    // remove from GUI
-                                    removeRectangle(allRectangleList[index]);
-                            }), DispatcherPriority.Background);
-                        else
-                            // return thread
+                            allRectangleList.Add(o as Rectangle);
+                        }
+                    });
+
+                    foreach (var t in allRectangleList)
+                    {
+                        if (colorSorterWorker.CancellationPending)
                             return;
+
+                        Dispatcher.Invoke(() =>
+                        {
+                            if (!sortList.Contains(t))
+                                RemoveRectangle(t);
+                        });
+                    }
                 }
                 catch (Exception e)
                 {
-                    // just display
-                    Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                    {
-                        // display error to user only
-                        MessageBox.Show($"There was an error filtering colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }));
+                    Dispatcher.Invoke(() => MessageBox.Show($"There was an error filtering colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error));
                 }
                 finally
                 {
-                    // begin invoke
-                    Dispatcher.Invoke(new LambdaCallback(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        // update status
                         Status = "Colour filter finished";
-
-                        // release worker
-                        colorArangmentWorker = null;
-
-                        // not sorting
+                        colorSorterWorker = null;
                         Mode = defaultMode;
-
-                        // set if all operations are idle
-                        AllBackgroundOperationsIdle = getIfAllBackgroundOperationsAreComplete();
-                    }));
+                        AllBackgroundOperationsIdle = GetIfAllBackgroundOperationsAreComplete();
+                    });
                 }
             };
 
-            // do work to do ^
-            colorArangmentWorker.RunWorkerAsync(rectangleCollection);
+            colorSorterWorker.RunWorkerAsync(rectangleCollection);
         }
 
-        /// <summary>
-        /// Populate the colors using a specified mode
-        /// </summary>
-        /// <param name="mode">The mode to use</param>
-        public void Populate(PopulationModes mode)
+        private void Populate(PopulationModes mode)
         {
-            // populating colors
             Mode = Mode.Populate;
-
-            // if filterer running
-            if (colorArangmentWorker != null)
-                // cancel
-                colorArangmentWorker.CancelAsync();
-
-            // create new worker
-            colorArangmentWorker = new BackgroundWorker();
-
-            // support cancel
-            colorArangmentWorker.WorkerSupportsCancellation = true;
-
-            // not idle
             AllBackgroundOperationsIdle = false;
 
-            // set worker work handler
-            colorArangmentWorker.DoWork += (sender, args) =>
+            colorSorterWorker?.CancelAsync();
+            colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
+            colorSorterWorker.DoWork += (sender, args) =>
             {
                 try
                 {
-                    // select mode
                     switch (mode)
                     {
                         case PopulationModes.Reds:
                         case PopulationModes.Greens:
                         case PopulationModes.Blues:
+                            
+                            byte r = 0;
+                            byte g = 0;
+                            byte b = 0;
+
+                            for (byte index = 0; index < 255; index++)
                             {
-                                // hold red byte
-                                byte r = 0;
-
-                                // hold green byte
-                                byte g = 0;
-
-                                // hold blue byte
-                                byte b = 0;
-
-                                // add itterate index
-                                for (byte index = 0; index < 255; index++)
+                                switch (mode)
                                 {
-                                    // select mode
-                                    switch (mode)
-                                    {
-                                        case PopulationModes.Blues:
-                                            {
-                                                // increment blue
-                                                b = index;
-
-                                                break;
-                                            }
-                                        case PopulationModes.Greens:
-                                            {
-                                                // increment green
-                                                g = index;
-
-                                                break;
-                                            }
-                                        case PopulationModes.Reds:
-                                            {
-                                                // increment red
-                                                r = index;
-
-                                                break;
-                                            }
-                                        default:
-                                            {
-                                                throw new NotImplementedException();
-                                            }
-                                    }
-
-
-                                    // add a new rectangle
-                                    Dispatcher.Invoke(new LambdaCallback(() =>
-                                    {
-                                        // add the color
-                                        addColor(Color.FromRgb(r, g, b));
-                                    }), DispatcherPriority.Background);
+                                    case PopulationModes.Blues:
+                                        b = index;
+                                        break;
+                                    case PopulationModes.Greens:
+                                        g = index;
+                                        break;
+                                    case PopulationModes.Reds:
+                                        r = index;
+                                        break;
+                                    case PopulationModes.Cyans:
+                                        break;
+                                    case PopulationModes.Yellows:
+                                        break;
+                                    case PopulationModes.Magentas:
+                                        break;
+                                    case PopulationModes.Grayscale:
+                                        break;
+                                    case PopulationModes.PresentationFramework:
+                                        break;
+                                    case PopulationModes.SystemColors:
+                                        break;
+                                    default:
+                                        throw new NotImplementedException();
                                 }
 
-                                break;
+                                Dispatcher.Invoke(() => AddColor(Color.FromRgb(r, g, b)));
                             }
+
+                            break;
+
                         case PopulationModes.Cyans:
                         case PopulationModes.Magentas:
                         case PopulationModes.Yellows:
+                            
+                            byte c = 0;
+                            byte m = 0;
+                            byte y = 0;
+
+                            for (byte index = 0; index < 255; index++)
                             {
-                                // hold cyan byte
-                                byte c = 0;
-
-                                // hold magenta byte
-                                byte m = 0;
-
-                                // hold yellow byte
-                                byte y = 0;
-
-                                // create converter for converting CMYK to RGB
-                                IValueConverter converter = new RGBToCMYKConverter();
-
-                                // add itterate index
-                                for (byte index = 0; index < 255; index++)
+                                switch (mode)
                                 {
-                                    // select mode
-                                    switch (mode)
-                                    {
-                                        case PopulationModes.Cyans:
-                                            {
-                                                // increment cyan
-                                                c = index;
-
-                                                break;
-                                            }
-                                        case PopulationModes.Magentas:
-                                            {
-                                                // increment magenta
-                                                m = index;
-
-                                                break;
-                                            }
-                                        case PopulationModes.Yellows:
-                                            {
-                                                // increment yellow
-                                                y = index;
-
-                                                break;
-                                            }
-                                        default:
-                                            {
-                                                throw new NotImplementedException();
-                                            }
-                                    }
-
-
-                                    // add a new rectangle
-                                    Dispatcher.Invoke(new LambdaCallback(() =>
-                                    {
-                                        // add the color
-                                        addColor((Color)converter.ConvertBack(new CMYKColor(1.0d / 255 * c, 1.0d / 255 * m, 1.0d / 255 * y, 0.0), typeof(Color), null, null));
-                                    }), DispatcherPriority.Background);
+                                    case PopulationModes.Cyans:
+                                        c = index;
+                                        break;
+                                    case PopulationModes.Magentas:
+                                        m = index;
+                                        break;
+                                    case PopulationModes.Yellows:
+                                        y = index;
+                                        break;
+                                    default:
+                                        throw new NotImplementedException();
                                 }
 
-                                break;
+                                Dispatcher.Invoke(() =>
+                                {
+                                    var cmyk = new CMYKColor(1.0d / 255 * c, 1.0d / 255 * m, 1.0d / 255 * y, 0.0);
+                                    AddColor(cmyk.ToColor());
+                                });
                             }
+
+                            break;
+
                         case PopulationModes.Grayscale:
-                            {
-                                // add itterate index
-                                for (byte index = 0; index < 255; index++)
-                                    // add a new rectangle
-                                    Dispatcher.Invoke(new LambdaCallback(() =>
-                                    {
-                                        // add the color
-                                        addColor(Color.FromArgb(255, index, index, index));
-                                    }), DispatcherPriority.Background);
+                            
+                            for (byte index = 0; index < 255; index++) 
+                                Dispatcher.Invoke(() => AddColor(Color.FromArgb(255, index, index, index)));
 
-                                break;
-                            }
+                            break;
+
                         case PopulationModes.PresentationFramework:
-                            {
-                                // hold properties
-                                var infos = typeof(Colors).GetProperties();
+                            
+                            foreach (var color in typeof(Colors).GetProperties())
+                                Dispatcher.Invoke(() => AddColor((Color)ColorConverter.ConvertFromString(color.Name));
 
-                                // itterate all properties
-                                for (var index = 0; index < infos.Length; index++)
-                                    // add a new rectangle
-                                    Dispatcher.Invoke(new LambdaCallback(() =>
-                                    {
-                                        // add the color
-                                        addColor((Color)ColorConverter.ConvertFromString(infos[index].Name));
-                                    }), DispatcherPriority.Background);
+                            break;
 
-                                break;
-                            }
                         case PopulationModes.SystemColors:
+                            
+                            foreach (var color in typeof(SystemColors).GetProperties())
                             {
-                                // hold properties
-                                var infos = typeof(SystemColors).GetProperties();
-
-                                // itterate all properties
-                                for (var index = 0; index < infos.Length; index++)
-                                    if (infos[index].GetValue(infos[index], null) is Color)
-                                        // add a new rectangle
-                                        Dispatcher.Invoke(new LambdaCallback(() =>
-                                        {
-                                            // add the color
-                                            addColor((Color)infos[index].GetValue(infos[index], null));
-                                        }), DispatcherPriority.Background);
-
-                                break;
+                                if (color.GetValue(color, null) is Color col)
+                                    Dispatcher.Invoke(() => AddColor((Color)color.GetValue(col, null)));
                             }
+
+                            break;
+
                         default:
-                            {
-                                throw new NotImplementedException();
-                            }
+                            throw new NotImplementedException();
                     }
                 }
                 catch (Exception e)
                 {
-                    // just display
-                    Dispatcher.BeginInvoke(new LambdaCallback(() =>
-                    {
-                        // display error to user only
-                        MessageBox.Show($"There was an error populating colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    }));
+                    Dispatcher.Invoke(() => MessageBox.Show($"There was an error populating colours: {e.Message}", "Sort Error", MessageBoxButton.OK, MessageBoxImage.Error));
                 }
                 finally
                 {
-                    // begin invoke
-                    Dispatcher.Invoke(new LambdaCallback(() =>
+                    Dispatcher.Invoke(() =>
                     {
-                        // update status
                         Status = "Colour population finished";
-
-                        // release worker
-                        colorArangmentWorker = null;
-
-                        // not sorting
+                        colorSorterWorker = null;
                         Mode = defaultMode;
-
-                        // set if all operations are idle
-                        AllBackgroundOperationsIdle = getIfAllBackgroundOperationsAreComplete();
-                    }));
+                        AllBackgroundOperationsIdle = GetIfAllBackgroundOperationsAreComplete();
+                    });
                 }
             };
 
-            // do work to do ^
-            colorArangmentWorker.RunWorkerAsync();
+            colorSorterWorker.RunWorkerAsync();
         }
 
         #endregion
 
         #region StaticMethods
 
-        /// <summary>
-        /// Get a propotion of 2 colors
-        /// </summary>
-        /// <param name="colorA">Color A</param>
-        /// <param name="colorB">Color B</param>
-        /// <returns>The proportion fo the combined colors</returns>
-        private static double getTwoColorProportion(double colorA, double colorB)
+        private static double GetTwoColorProportion(double colorA, double colorB)
         {
-            // calculate
             return (colorA + colorB) / 2;
-        }
-
-        /// <summary>
-        /// Sort rectangles by their colour, cyan primarily, then yellows, then blues
-        /// </summary>
-        /// <param name="a">Rectangle a</param>
-        /// <param name="b">Rectangle b</param>
-        /// <returns>The result (as an integer) of the equation. More cyan, then magenta, then yellow colors return negative numbers</returns>
-        private static int sortRectanglesByCMYKColor(Rectangle a, Rectangle b)
-        {
-            // if incorrect fills
-            if (!(a.Fill is SolidColorBrush) || !(b.Fill is SolidColorBrush))
-                // throw exception
-                throw new Exception("Only rectangles with fills that are of type SolidColorBrush can be sorted");
-
-            // create converter
-            IValueConverter rgbToCMYKConverter = new RGBToCMYKConverter();
-
-            // get color a
-            var colorA = rgbToCMYKConverter.Convert(((SolidColorBrush)a.Fill).Color, typeof(CMYKColor), null, null) as CMYKColor;
-
-            // get color b
-            var colorB = rgbToCMYKConverter.Convert(((SolidColorBrush)b.Fill).Color, typeof(CMYKColor), null, null) as CMYKColor;
-
-            // check cyan first
-            if (colorA.Cyan > colorB.Cyan)
-                // less - more cyan
-                return -1;
-
-            if (colorA.Cyan < colorB.Cyan)
-                // more - less cyan
-                return 1;
-
-            // check magenta
-            if (colorA.Magenta > colorB.Magenta)
-                // less - more magenta
-                return -1;
-
-            if (colorA.Magenta < colorB.Magenta)
-                // more - less magenta
-                return 1;
-
-            // compare yellow
-            if (colorA.Yellow > colorB.Yellow)
-                // less - more yellow
-                return -1;
-
-            if (colorA.Yellow < colorB.Yellow)
-                // more - less yellow
-                return 1;
-
-            // check key
-            if (colorA.Key > colorB.Key)
-                // more - darker
-                return -1;
-            if (colorA.Key < colorB.Key)
-                // less - lighter
-                return 1;
-            return 0;
-        }
-
-        /// <summary>
-        /// Sort rectangles by their colour, red primarily, then blues, then greens
-        /// </summary>
-        /// <param name="a">Rectangle a</param>
-        /// <param name="b">Rectangle b</param>
-        /// <returns>The result (as an integer) of the equation. Redder, then bluer, then greener, then alpha values return negative numbers</returns>
-        private static int sortRectanglesByARGBColor(Rectangle a, Rectangle b)
-        {
-            // if incorrect fills
-            if (!(a.Fill is SolidColorBrush) || !(b.Fill is SolidColorBrush))
-                // throw exception
-                throw new Exception("Only rectangles with fills that are of type SolidColorBrush can be sorted");
-
-            // get color a
-            var colorA = ((SolidColorBrush)a.Fill).Color;
-
-            // get color b
-            var colorB = ((SolidColorBrush)b.Fill).Color;
-
-            // check reds first
-            if (colorA.R > colorB.R)
-                // less - more red
-                return -1;
-
-            if (colorA.R < colorB.R)
-                // more - less red
-                return 1;
-
-            // check greens
-            if (colorA.G > colorB.G)
-                // less - more green
-                return -1;
-
-            if (colorA.G < colorB.G)
-                // more - less green
-                return 1;
-
-            // compare blues
-            if (colorA.B > colorB.B)
-                // less - more blue
-                return -1;
-
-            if (colorA.B < colorB.B)
-                // more - less blue
-                return 1;
-
-            // ccheck aplha
-            if (colorA.A > colorB.A)
-                // less - darker
-                return -1;
-            if (colorA.A < colorB.A)
-                // more - lighter
-                return 1;
-            return 0;
-        }
-
-        /// <summary>
-        /// Sort rectangles by their relative greyscale
-        /// </summary>
-        /// <param name="a">Rectangle a</param>
-        /// <param name="b">Rectangle b</param>
-        /// <returns>The result (as an integer) of the equation. Darker colors return negative numbers, where as lighter colors return positive numbers</returns>
-        private static int sortRectanglesByRelativeGrayscale(Rectangle a, Rectangle b)
-        {
-            // if incorrect fills
-            if (!(a.Fill is SolidColorBrush) || !(b.Fill is SolidColorBrush))
-                // throw exception
-                throw new Exception("Only rectangles with fills that are of type SolidColorBrush can be sorted");
-
-            // get color a
-            var colorA = ((SolidColorBrush)a.Fill).Color;
-
-            // get color b
-            var colorB = ((SolidColorBrush)b.Fill).Color;
-
-            // get average * alpha
-            var aAve = (byte)((colorA.R + colorA.G + colorA.B) / 3d / 255d * colorA.A);
-
-            // get average * alpha
-            var bAve = (byte)((colorB.R + colorB.G + colorB.B) / 3d / 255d * colorB.A);
-
-            // check alpha first
-            if (aAve > bAve)
-                // lighter
-                return 1;
-            if (aAve < bAve)
-                // darker
-                return -1;
-            return 0;
-        }
-
-
-        /// <summary>
-        /// Sort rectangles by HSV
-        /// </summary>
-        /// <param name="a">Rectangle a</param>
-        /// <param name="b">Rectangle b</param>
-        /// <returns>The result (as an integer) of the equation. Darker colors return negative numbers, where as lighter colors return positive numbers</returns>
-        private static int sortRectanglesByHSV(Rectangle a, Rectangle b)
-        {
-            // if incorrect fills
-            if (!(a.Fill is SolidColorBrush) || !(b.Fill is SolidColorBrush))
-                // throw exception
-                throw new Exception("Only rectangles with fills that are of type SolidColorBrush can be sorted");
-
-            // get color a
-            var colorA = ((SolidColorBrush)a.Fill).Color;
-
-            // get color b
-            var colorB = ((SolidColorBrush)b.Fill).Color;
-
-            // create converter
-            IValueConverter converter = new RGBToHSVConverter();
-
-            // color a as HSV
-            var colorAHSV = converter.Convert(colorA, typeof(HSVColor), null, null) as HSVColor;
-
-            // color b as HSV
-            var colorBHSV = converter.Convert(colorB, typeof(HSVColor), null, null) as HSVColor;
-
-            // now we compare colors h first, then saturation, then value
-            if (colorAHSV.Hue > colorBHSV.Hue)
-                // greater
-                return 1;
-
-            if (colorAHSV.Hue < colorBHSV.Hue)
-                // less
-                return -1;
-
-            // compare saturation
-            if (colorAHSV.Saturation > colorBHSV.Saturation)
-                // greater
-                return 1;
-
-            if (colorAHSV.Saturation < colorBHSV.Saturation)
-                // less
-                return -1;
-
-            // compare value
-            if (colorAHSV.Value > colorBHSV.Value)
-                // greater
-                return 1;
-            if (colorAHSV.Value < colorBHSV.Value)
-                // less
-                return -1;
-            return 0;
-        }
-
-        /// <summary>
-        /// Sort rectangles by a ranomizing them
-        /// </summary>
-        /// <param name="a">Rectangle a</param>
-        /// <param name="b">Rectangle b</param>
-        /// <returns>The result (as an integer) of the equation</returns>
-        private static int sortRectanglesByRandom(Rectangle a, Rectangle b)
-        {
-            // generate random
-            return randomGenerator.Next(-1, 2);
         }
 
         #endregion
 
         #region PropertyCallbacks
 
-        /// <summary>
-        /// Shared handleing for Alpha, Red, Green and Blue property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnSharedARGBPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnSharedARGBPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
             var window = obj as MainWindow;
 
-            // update swatch
+            if (window == null)
+                return;
+
             window.swatchBorder.Background = new SolidColorBrush(Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue));
 
-            // if updating by argb or using pipette
-            if (window.ColorSpace == ColorSpace.ARGB)
-            {
-                // get cmyk 
-                var cymkColor = window.rgb2cmykConverter.Convert(Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue), typeof(CMYKColor), null, null) as CMYKColor;
+            if (window.ColorSpace != ColorSpace.ARGB)
+                return;
 
-                // update cmyk
-                window.Cyan = cymkColor.Cyan * 100;
-                window.Magenta = cymkColor.Magenta * 100;
-                window.Yellow = cymkColor.Yellow * 100;
-                window.K = cymkColor.Key * 100;
+            var argb = Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue);
+            var cymkColor = argb.ToCMYK();
+            var hsvColor = argb.ToHSV();
 
-                // get hsv
-                var hsvColor = window.rgb2hsvConverter.Convert(Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue), typeof(HSVColor), null, null) as HSVColor;
-
-                // update hsv
-                window.Hue = hsvColor.Hue * 100;
-                window.Saturation = hsvColor.Saturation * 100;
-                window.Value = hsvColor.Value * 100;
-            }
+            window.Cyan = cymkColor.Cyan * 100;
+            window.Magenta = cymkColor.Magenta * 100;
+            window.Yellow = cymkColor.Yellow * 100;
+            window.K = cymkColor.Key * 100;
+            window.Hue = hsvColor.Hue * 100;
+            window.Saturation = hsvColor.Saturation * 100;
+            window.Value = hsvColor.Value * 100;
         }
 
-        /// <summary>
-        /// Shared handleing for Cyan, Magenta, Yellow and Key property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnSharedCMYKPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnSharedCMYKPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
             var window = obj as MainWindow;
 
-            // if updating by cmyk
-            if (window.ColorSpace == ColorSpace.CMYK)
-            {
-                // get color 
-                var color = (Color)window.rgb2cmykConverter.ConvertBack(new CMYKColor(window.Cyan / 100, window.Magenta / 100, window.Yellow / 100, window.K / 100), typeof(Color), null, null);
+            if (window == null)
+                return;
 
-                // update argb
-                window.Red = color.R;
-                window.Green = color.G;
-                window.Blue = color.B;
+            if (window.ColorSpace != ColorSpace.CMYK)
+                return;
 
-                // get hsv
-                var hsvColor = window.rgb2hsvConverter.Convert(Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue), typeof(HSVColor), null, null) as HSVColor;
+            var cmyk = new CMYKColor(window.Cyan / 100, window.Magenta / 100, window.Yellow / 100, window.K / 100);
+            var argb = cmyk.ToColor();
+            var hsv = argb.ToHSV();
 
-                // update hsv
-                window.Hue = hsvColor.Hue * 100;
-                window.Saturation = hsvColor.Saturation * 100;
-                window.Value = hsvColor.Value * 100;
-            }
+            window.Red = argb.R;
+            window.Green = argb.G;
+            window.Blue = argb.B;
+            window.Hue = hsv.Hue * 100;
+            window.Saturation = hsv.Saturation * 100;
+            window.Value = hsv.Value * 100;
         }
 
-        /// <summary>
-        /// Shared handleing for Hue, Saturation and Value property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnSharedHSVPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnSharedHSVPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
             var window = obj as MainWindow;
 
-            // if updating by HSV
-            if (window.ColorSpace == ColorSpace.HSV)
-            {
-                // get color 
-                var color = (Color)window.rgb2hsvConverter.ConvertBack(new HSVColor(window.Hue / 100, window.Saturation / 100, window.Value / 100), typeof(Color), null, null);
+            if (window == null)
+                return;
 
-                // update argb
-                window.Red = color.R;
-                window.Green = color.G;
-                window.Blue = color.B;
+            if (window.ColorSpace != ColorSpace.HSV)
+                return;
 
-                // get cmyk 
-                var cymkColor = window.rgb2cmykConverter.Convert(color, typeof(CMYKColor), null, null) as CMYKColor;
+            var hsv = new HSVColor(window.Hue / 100, window.Saturation / 100, window.Value / 100);
+            var argb = hsv.ToColor();
+            var cmyk = argb.ToCMYK();
 
-                // update cmyk
-                window.Cyan = cymkColor.Cyan * 100;
-                window.Magenta = cymkColor.Magenta * 100;
-                window.Yellow = cymkColor.Yellow * 100;
-                window.K = cymkColor.Key * 100;
-            }
+            window.Red = argb.R;
+            window.Green = argb.G;
+            window.Blue = argb.B;
+            window.Cyan = cmyk.Cyan * 100;
+            window.Magenta = cmyk.Magenta * 100;
+            window.Yellow = cmyk.Yellow * 100;
+            window.K = cmyk.Key * 100;
         }
 
-        /// <summary>
-        /// Handle Mode property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnModePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnModePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
             var window = obj as MainWindow;
 
-            // get the new mode
+            if (window == null)
+                return;
+
             var newMode = (Mode)args.NewValue;
 
-            // select mode
             switch (newMode)
             {
                 case Mode.Add:
-                    {
-                        // set cursor
-                        window.Cursor = Cursors.Arrow;
-
-                        // set status
-                        window.Status = "Ready";
-
-                        // set cursor
-                        window.coloursGrid.Cursor = Cursors.Hand;
-
-                        break;
-                    }
+                    window.Cursor = Cursors.Arrow;
+                    window.Status = "Ready";
+                    window.coloursGrid.Cursor = Cursors.Hand;
+                    break;
                 case Mode.Delete:
-                    {
-                        // set staus
-                        window.Status = "Click a color to remove it, or press escape to cancel...";
-
-                        // set cursor
-                        window.coloursGrid.Cursor = Cursors.Arrow;
-
-                        break;
-                    }
+                    window.Status = "Click a color to remove it, or press escape to cancel...";
+                    window.coloursGrid.Cursor = Cursors.Arrow;
+                    break;
                 case Mode.Filter:
-                    {
-                        // set cursor
-                        window.Cursor = Cursors.Wait;
-
-                        // set staus
-                        window.Status = "Colours are being filtered, press escape to cancel...";
-
-                        break;
-                    }
+                    window.Cursor = Cursors.Wait;
+                    window.Status = "Colours are being filtered, press escape to cancel...";
+                    break;
                 case Mode.Pipette:
-                    {
-                        // set cursor
-                        window.Cursor = Cursors.Pen;
-
-                        // set staus
-                        window.Status = "Move the mouse to the desired pixel, and release the mouse button to select as a colour...";
-
-                        break;
-                    }
+                    window.Cursor = Cursors.Pen;
+                    window.Status = "Move the mouse to the desired pixel, and release the mouse button to select as a colour...";
+                    break;
                 case Mode.ROIGather:
-                    {
-                        // set cursor
-                        window.Cursor = Cursors.Cross;
-
-                        // set staus
-                        window.Status = "Move to the top left of the region and press and hold Shift to specify the first point...";
-
-                        break;
-                    }
+                    window.Cursor = Cursors.Cross;
+                    window.Status = "Move to the top left of the region and press and hold Shift to specify the first point...";
+                    break;
                 case Mode.Sort:
-                    {
-                        // set cursor
-                        window.Cursor = Cursors.Wait;
-
-                        // set staus
-                        window.Status = "Colours are being sorted, press escape to cancel...";
-
-                        break;
-                    }
+                    window.Cursor = Cursors.Wait;
+                    window.Status = "Colours are being sorted, press escape to cancel...";
+                    break;
                 case Mode.Populate:
-                    {
-                        // set cursor
-                        window.Cursor = Cursors.Wait;
-
-                        // set staus
-                        window.Status = "Colours are being populated, press escape to cancel...";
-
-                        break;
-                    }
+                    window.Cursor = Cursors.Wait;
+                    window.Status = "Colours are being populated, press escape to cancel...";
+                    break;
                 default:
-                    {
-                        throw new NotImplementedException();
-                    }
+                    throw new NotImplementedException();
             }
         }
 
-        /// <summary>
-        /// Handle MaxOutAlphaOnPreview property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnMaxOutAlphaOnPreviewPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnMaxOutAlphaOnPreviewPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
-            var window = obj as MainWindow;
-
-            // set if maxing out colors
             FullScreenPreviewWindow.MaxOutAlphaOnPreview = (bool)args.NewValue;
         }
 
-        /// <summary>
-        /// Handle GridMode property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnGridModePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnGridModePropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
             var window = obj as MainWindow;
 
-            // select mode
+            if (window == null)
+                return;
+
             switch ((GridMode)args.NewValue)
             {
                 case GridMode.FitToArea:
-                    {
-                        // set grid columns
-                        window.coloursGrid.Columns = 0;
+                    window.coloursGrid.Columns = 0;
+                    window.coloursGrid.FirstColumn = 0;
 
-                        // set first column
-                        window.coloursGrid.FirstColumn = 0;
+                    foreach (Rectangle r in window.coloursGrid.Children)
+                        r.Style = window.coloursGrid.FindResource("SizeableRectangleStyle") as Style;
 
-                        // itterate all children
-                        foreach (Rectangle r in window.coloursGrid.Children)
-                            // set style
-                            r.Style = window.coloursGrid.FindResource("sizeableRectangleStyle") as Style;
-
-                        break;
-                    }
+                    break;
                 case GridMode.MaintainSize:
-                    {
-                        // set grid columns
-                        window.coloursGrid.Columns = (int)window.FixedColumns;
+                    window.coloursGrid.Columns = (int)window.FixedColumns;
 
-                        // itterate all children
-                        foreach (Rectangle r in window.coloursGrid.Children)
-                            // set style
-                            r.Style = window.coloursGrid.FindResource("squareRectangleStyle") as Style;
+                    foreach (Rectangle r in window.coloursGrid.Children)
+                        r.Style = window.coloursGrid.FindResource("squareRectangleStyle") as Style;
 
-                        break;
-                    }
+                    break;
                 default:
-                    {
-                        throw new NotImplementedException();
-                    }
+                    throw new NotImplementedException();
             }
         }
 
-        /// <summary>
-        /// Handle FixedColumns property changes
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="args"></param>
-        public static void OnFixedColumnsPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        private static void OnFixedColumnsPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
         {
-            // get object
             var window = obj as MainWindow;
 
-            // if in maintain size mode
+            if (window == null)
+                return;
+
             if (window.GridMode == GridMode.MaintainSize)
-                // set grid columns
-                window.coloursGrid.Columns = (int)(double)args.NewValue;
+                window.coloursGrid.Columns = (int)args.NewValue;
         }
 
         #endregion
 
         #region EventHandlers
 
-        private void addButton_Click(object sender, RoutedEventArgs e)
+        private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            // add color
-            addColor(Color.FromArgb(Alpha, Red, Green, Blue));
+            AddColor(Color.FromArgb(Alpha, Red, Green, Blue));
         }
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            // update all manifest properties
-            updateManifestProperties();
+            UpdateManifestProperties();
         }
 
-        private void window_Closed(object sender, EventArgs e)
+        private void Window_Closed(object sender, EventArgs e)
         {
-            // remove subscription from ColorModificationComplete event
-            ((ColorInfoWindow)sender).ColorModificationComplete -= window_ColorModificationComplete;
+            var colorInfoWindow = sender as ColorInfoWindow;
 
-            // remove subscription from Closed event
-            ((ColorInfoWindow)sender).ColorModificationComplete -= window_Closed;
+            if (colorInfoWindow == null)
+                return;
+
+            colorInfoWindow.ColorModificationComplete -= cClorInfoWindow_ColorModificationComplete;
+            colorInfoWindow.ColorModificationComplete -= Window_Closed;
         }
 
-        private void window_ColorModificationComplete(object sender, ColorEventArgs args)
+        private void cClorInfoWindow_ColorModificationComplete(object sender, Color color)
         {
-            // add color
-            addColor(args.Color);
+            AddColor(color);
         }
 
-        private void pickColorButton_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void PickColorButton_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            // begin colour picking
-            beginColorPicking();
+            BeginColorPicking();
         }
 
-        private void resetButton_Click(object sender, RoutedEventArgs e)
+        private void ResetButton_Click(object sender, RoutedEventArgs e)
         {
-            // set alpha
             Alpha = 255;
-
-            // set red
             Red = 255;
-
-            // set green
             Green = 255;
-
-            // set blue
             Blue = 255;
         }
 
         private void Window_KeyDown(object sender, KeyEventArgs e)
         {
-            // handle window keys
             switch (e.Key)
             {
-                case colorSelectionModesModifierKeyWPF:
+                case ColorSelectionModesModifierKeyWPF:
+
+                    if (Mode != Mode.ROIGather && GetIfAllBackgroundOperationsAreComplete())
                     {
-                        // if not roi selection going on...
-                        if (Mode != Mode.ROIGather &&
-                            getIfAllBackgroundOperationsAreComplete())
-                        {
-                            // begin color picking
-                            beginColorPicking();
-                        }
-                        else
-                        {
-                            // set status
-                            Status = "Drag to the bottom right of the region and release Shift to complete selection...";
-
-                            // if no top left already set
-                            if (roiSelectionTopLeft == null)
-                                // set top left
-                                roiSelectionTopLeft = getCurrentMousePositionOverVirtualScreen();
-                        }
-
-                        break;
+                        BeginColorPicking();
                     }
-                case deincrementAlphaKeyWPF:
+                    else
                     {
-                        // deincrement
-                        Alpha = deincrementByte(Alpha);
+                        Status = "Drag to the bottom right of the region and release Shift to complete selection...";
 
-                        break;
+                        if (roiSelectionTopLeft == null)
+                            roiSelectionTopLeft = GetCurrentMousePositionOverVirtualScreen();
                     }
-                case deincrementBrightnessKeyWPF:
-                    {
-                        // deincrement
-                        Red = deincrementByte(Red);
-                        Green = deincrementByte(Green);
-                        Blue = deincrementByte(Blue);
 
-                        break;
-                    }
-                case incrementAlphaKeyWPF:
-                    {
-                        // increment
-                        Alpha = incrementByte(Alpha);
+                    break;
 
-                        break;
-                    }
-                case incrementBrightnessKeyWPF:
-                    {
-                        // increment
-                        Red = incrementByte(Red);
-                        Green = incrementByte(Green);
-                        Blue = incrementByte(Blue);
+                case DecrementAlphaKeyWPF:
+                    
+                    Alpha = DeincrementByte(Alpha);
 
-                        break;
-                    }
+                    break;
+
+                case DeccrementBrightnessKeyWPF:
+                    
+                    Red = DeincrementByte(Red);
+                    Green = DeincrementByte(Green);
+                    Blue = DeincrementByte(Blue);
+
+                    break;
+
+                case IncrementAlphaKeyWPF:
+                    
+                    Alpha = IncrementByte(Alpha);
+
+                    break;
+
+                case IncrementBrightnessKeyWPF:
+                    
+                    Red = IncrementByte(Red);
+                    Green = IncrementByte(Green);
+                    Blue = IncrementByte(Blue);
+
+                    break;
+
                 case Key.Escape:
+                    
+                    if (Mode == Mode.ROIGather)
                     {
-                        // if roi selecting
-                        if (Mode == Mode.ROIGather)
-                        {
-                            // reset coordinates
-                            roiSelectionTopLeft = null;
-                            roiSelectionBottomRight = null;
-                        }
-
-                        // if gathering working
-                        if (roiGatherWorker != null &&
-                            roiGatherWorker.IsBusy)
-                            // set cancelled
-                            roiGatherWorker.CancelAsync();
-
-                        // if sorting working
-                        if (colorArangmentWorker != null &&
-                            colorArangmentWorker.IsBusy)
-                            // set cancelled
-                            colorArangmentWorker.CancelAsync();
-
-                        // reset mode
-                        Mode = defaultMode;
-
-                        break;
+                        roiSelectionTopLeft = null;
+                        roiSelectionBottomRight = null;
                     }
+
+                    if (roiGatherWorker != null && roiGatherWorker.IsBusy)
+                        roiGatherWorker.CancelAsync();
+
+                    if (colorSorterWorker != null && colorSorterWorker.IsBusy)
+                        colorSorterWorker.CancelAsync();
+
+                    Mode = defaultMode;
+
+                    break;
             }
         }
 
@@ -2942,7 +1637,7 @@ namespace BP.ColourChimp.Windows
             // check the modifier key
             switch (e.Key)
             {
-                case colorSelectionModesModifierKeyWPF:
+                case ColorSelectionModesModifierKeyWPF:
                     {
                         // if color picking
                         if (Mode == Mode.Pipette)
@@ -2971,7 +1666,7 @@ namespace BP.ColourChimp.Windows
                                 bottom = Math.Max(roiSelectionBottomRight.Value.Y, roiSelectionTopLeft.Value.Y);
 
                                 // begin gather of ROI - with actual top left, bottom right coordinates
-                                gatherAllPixelsInROI(top, left, bottom, right);
+                                GatherAllPixelsInROI(top, left, bottom, right);
                             }
 
                             // release coordinates
@@ -3000,7 +1695,7 @@ namespace BP.ColourChimp.Windows
                     if (Mode == Mode.Delete)
                     {
                         // remove the rectangle
-                        removeRectangle(result.VisualHit as Rectangle);
+                        RemoveRectangle(result.VisualHit as Rectangle);
                     }
                     else
                     {
@@ -3082,133 +1777,133 @@ namespace BP.ColourChimp.Windows
         private void incrementAlphaButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Alpha = incrementByte(Alpha);
+            Alpha = IncrementByte(Alpha);
         }
 
         private void incrementRedButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Red = incrementByte(Red);
+            Red = IncrementByte(Red);
         }
 
         private void incrementGreenButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Green = incrementByte(Green);
+            Green = IncrementByte(Green);
         }
 
         private void incrementBlueButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Blue = incrementByte(Blue);
+            Blue = IncrementByte(Blue);
         }
 
         private void deincrementBlueButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Blue = deincrementByte(Blue);
+            Blue = DeincrementByte(Blue);
         }
 
         private void deincrementGreenButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Green = deincrementByte(Green);
+            Green = DeincrementByte(Green);
         }
 
         private void deincrementRedButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Red = deincrementByte(Red);
+            Red = DeincrementByte(Red);
         }
 
         private void deincrementAlphaButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Alpha = deincrementByte(Alpha);
+            Alpha = DeincrementByte(Alpha);
         }
 
         private void incrementCyanButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Cyan = incrementDouble(Cyan);
+            Cyan = IncrementDouble(Cyan);
         }
 
         private void incrementYellowButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Yellow = incrementDouble(Yellow);
+            Yellow = IncrementDouble(Yellow);
         }
 
         private void incrementKeyButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            K = incrementDouble(K);
+            K = IncrementDouble(K);
         }
 
         private void incrementMagentaButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Magenta = incrementDouble(Magenta);
+            Magenta = IncrementDouble(Magenta);
         }
 
         private void deincrementCyanButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Cyan = deincrementDouble(Cyan);
+            Cyan = DecrementDouble(Cyan);
         }
 
         private void deincrementMagentaButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Magenta = deincrementDouble(Magenta);
+            Magenta = DecrementDouble(Magenta);
         }
 
         private void deincrementYellowButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Yellow = deincrementDouble(Yellow);
+            Yellow = DecrementDouble(Yellow);
         }
 
         private void deincrementKeyButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            K = deincrementDouble(K);
+            K = DecrementDouble(K);
         }
 
         private void incrementHueButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Hue = incrementDouble(Hue);
+            Hue = IncrementDouble(Hue);
         }
 
         private void incrementSaturationButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Saturation = incrementDouble(Saturation);
+            Saturation = IncrementDouble(Saturation);
         }
 
         private void incrementValueButton_Click(object sender, RoutedEventArgs e)
         {
             // increment
-            Value = incrementDouble(Value);
+            Value = IncrementDouble(Value);
         }
 
         private void deincrementHueButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Hue = deincrementDouble(Hue);
+            Hue = DecrementDouble(Hue);
         }
 
         private void deincrementSaturationButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Saturation = deincrementDouble(Saturation);
+            Saturation = DecrementDouble(Saturation);
         }
 
         private void deincrementValueButton_Click(object sender, RoutedEventArgs e)
         {
             // deincrement
-            Value = deincrementDouble(Value);
+            Value = DecrementDouble(Value);
         }
 
         private void sFD_FileOk(object sender, CancelEventArgs e)
@@ -3222,7 +1917,7 @@ namespace BP.ColourChimp.Windows
                 defaultPath = sfd.FileName.Substring(0, sfd.FileName.LastIndexOf("\\") - 1);
 
                 // export
-                ExportPatchworkAsPNG(sfd.FileName);
+                ExportPatchwork(sfd.FileName);
             }
             catch (Exception)
             {
@@ -3270,10 +1965,10 @@ namespace BP.ColourChimp.Windows
             window.Owner = Application.Current.MainWindow;
 
             // modification event
-            window.ColorModificationComplete += window_ColorModificationComplete;
+            window.ColorModificationComplete += cClorInfoWindow_ColorModificationComplete;
 
             // close event
-            window.Closed += window_Closed;
+            window.Closed += Window_Closed;
 
             // display the info
             window.DisplayInfo(ColorSpace);
@@ -3282,7 +1977,7 @@ namespace BP.ColourChimp.Windows
             window.Show();
         }
 
-        #region MenuItems
+#region MenuItems
 
         private void windowNameItem_Click(object sender, RoutedEventArgs e)
         {
@@ -3311,7 +2006,7 @@ namespace BP.ColourChimp.Windows
                     // get window rectangle
                     if (DesktopHelper.GetWindowRect(handle, out rectangle))
                         // capture roi
-                        gatherAllPixelsInROI(rectangle.Top, rectangle.Left, rectangle.Bottom, rectangle.Right);
+                        GatherAllPixelsInROI(rectangle.Top, rectangle.Left, rectangle.Bottom, rectangle.Right);
 
                     // get helper for interop
                     var helper = new WindowInteropHelper(this);
@@ -3340,22 +2035,22 @@ namespace BP.ColourChimp.Windows
                 populateWindowsSubMenuWithOpenWindows();
         }
 
-        #endregion
+#endregion
 
-        #endregion
+#endregion
 
-        #region CommandCallbacks
+#region CommandCallbacks
 
         private void imortComandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // show dialog
-            showImportDialog();
+            ShowImportDialog();
         }
 
         private void exportCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // show dialog
-            showExportDialog();
+            ShowExportDialog();
         }
 
         private void exitCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -3415,31 +2110,31 @@ namespace BP.ColourChimp.Windows
         private void sortRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // sort colors
-            sortColors(sortRectanglesByARGBColor);
+            SortColors(sortRectanglesByARGBColor);
         }
 
         private void sortCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // sort colors
-            sortColors(sortRectanglesByCMYKColor);
+            SortColors(sortRectanglesByCMYKColor);
         }
 
         private void sortHSVCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // sort colors
-            sortColors(sortRectanglesByHSV);
+            SortColors(sortRectanglesByHSV);
         }
 
         private void sortGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // sort colors
-            sortColors(sortRectanglesByRelativeGrayscale);
+            SortColors(sortRectanglesByRelativeGrayscale);
         }
 
         private void randomizeCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // sort colors
-            sortColors(sortRectanglesByRandom);
+            SortColors(sortRectanglesByRandom);
         }
 
         private void discardNonDominantRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -3516,7 +2211,7 @@ namespace BP.ColourChimp.Windows
         private void adCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // add color
-            addColor(Color.FromArgb(Alpha, Red, Green, Blue));
+            AddColor(Color.FromArgb(Alpha, Red, Green, Blue));
         }
 
         private void gatherROICommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -3528,7 +2223,7 @@ namespace BP.ColourChimp.Windows
         private void gatherFullScreenCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             // capture full
-            gatherAllPixelsInROI(0, 0, SystemInformation.VirtualScreen.Height, SystemInformation.VirtualScreen.Width);
+            GatherAllPixelsInROI(0, 0, SystemInformation.VirtualScreen.Height, SystemInformation.VirtualScreen.Width);
         }
 
         private void populartePresentationFrameworkCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -3543,10 +2238,10 @@ namespace BP.ColourChimp.Windows
             Mode = Mode.Delete;
         }
 
-        #endregion
+#endregion
     }
 
-    #region ValidationRules
+#region ValidationRules
 
     /// <summary>
     /// Validation rule for bytes
@@ -3715,9 +2410,9 @@ namespace BP.ColourChimp.Windows
         }
     }
 
-    #endregion
+#endregion
 
-    #region Converters
+-#region Converters
 
     /// <summary>
     /// Converts a Double to a Visibility. The Double provided as the value is compared to the Double provided as the parameter. If the value >= the parameter Visibility.Visible is returned, else Visibility.Hidden is returned
@@ -3725,7 +2420,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(double), typeof(Visibility))]
     public class DoubleHeightGreaterThatParameterToVisibilityConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3750,7 +2445,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3759,7 +2454,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(Color), typeof(Color))]
     public class BackgroundColorToReadableForegroundColorConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3786,7 +2481,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3795,7 +2490,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(byte), typeof(string))]
     public class ByteToHexStringConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3836,7 +2531,7 @@ namespace BP.ColourChimp.Windows
             return (byte)0;
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3845,7 +2540,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(byte), typeof(double))]
     public class ByteToDoublePercentConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3873,7 +2568,7 @@ namespace BP.ColourChimp.Windows
             return (byte)0;
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3882,7 +2577,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(byte), typeof(bool))]
     public class NotMaxByteToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3902,7 +2597,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3911,7 +2606,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(byte), typeof(bool))]
     public class NotMinByteToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3931,7 +2626,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3940,7 +2635,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(byte), typeof(bool))]
     public class NotMaxDoublePercentageToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3960,7 +2655,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3969,7 +2664,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(byte), typeof(bool))]
     public class NotMinDoublePercentageToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -3989,7 +2684,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -3998,7 +2693,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(bool), typeof(bool))]
     public class BooleanAndMultiConverter : IMultiValueConverter
     {
-        #region IMultiValueConverter Members
+#region IMultiValueConverter Members
 
         object IMultiValueConverter.Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
@@ -4031,7 +2726,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -4040,7 +2735,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(GridMode), typeof(bool))]
     public class EGridModeToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -4100,7 +2795,7 @@ namespace BP.ColourChimp.Windows
             }
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -4109,7 +2804,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(double), typeof(bool))]
     public class DoubleToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -4166,7 +2861,7 @@ namespace BP.ColourChimp.Windows
             }
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -4175,7 +2870,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(GridMode), typeof(VerticalAlignment))]
     public class EGridModeToVerticalAlignmentConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -4199,7 +2894,7 @@ namespace BP.ColourChimp.Windows
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 
     /// <summary>
@@ -4208,7 +2903,7 @@ namespace BP.ColourChimp.Windows
     [ValueConversion(typeof(ColorSpace), typeof(bool))]
     public class EColorSpaceToBooleanConverter : IValueConverter
     {
-        #region IValueConverter Members
+#region IValueConverter Members
 
         object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -4260,214 +2955,8 @@ namespace BP.ColourChimp.Windows
             }
         }
 
-        #endregion
-    }
-
-    /// <summary>
-    /// Converts a double specified as a percentage to a normalised double
-    /// </summary>
-    [ValueConversion(typeof(double), typeof(double))]
-    public class DoublePercentageToNormalisedDoubleConverter : IValueConverter
-    {
-        #region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold output
-            double d;
-
-            // if parese
-            if (value != null &&
-                double.TryParse(value.ToString(), out d))
-                // normalise
-                return Math.Round(d /= 100, 3);
-            return 0.0d;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold output
-            double d;
-
-            // if parese
-            if (value != null &&
-                double.TryParse(value.ToString(), out d))
-                // change to percentage
-                return Math.Round(d *= 100, 3);
-            return 0.0d;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// Converts between a double percentage and a double degrees value
-    /// </summary>
-    [ValueConversion(typeof(double), typeof(double))]
-    public class DoublePercentageToDoubleDegreesConverter : IValueConverter
-    {
-        #region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value
-            double d;
-
-            // try get d
-            if (value != null &&
-                double.TryParse(value.ToString(), out d))
-                // return
-                return Math.Round(360 * (d / 100), 1);
-            return 0.0d;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value
-            double d;
-
-            // try get d
-            if (value != null &&
-                double.TryParse(value.ToString(), out d))
-                // return
-                return Math.Round(100d / 360d * d, 1);
-            return 0.0d;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// Converts a double percentage to a byte (percentage of 255)
-    /// </summary>
-    [ValueConversion(typeof(double), typeof(byte))]
-    public class DoublePercentageToByteConverter : IValueConverter
-    {
-        #region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value as double
-            double valueAsDouble;
-
-            // if a value that parses
-            if (value != null &&
-                double.TryParse(value.ToString(), out valueAsDouble))
-                // convert to byte
-                return (byte)Math.Round(255d / 100d * valueAsDouble, 0);
-            return (byte)0;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value as byte
-            byte valueAsByte;
-
-            // if a value that parses
-            if (value != null &&
-                byte.TryParse(value.ToString(), out valueAsByte))
-                // convert to percent
-                return Math.Round(100d / 255d * valueAsByte, 1);
-            return 0d;
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// Represents a class for converting between Boolean and Visibility values. A boolean value can be specified as the paramater - this will deifne the state that Visibility.Visible is returned, if the boolean provided as the value parameter doesn't match this value then Visibilty.Hidden is returned
-    /// </summary>
-    [ValueConversion(typeof(bool), typeof(Visibility))]
-    public class BooleanToVisibiltyConverter : IValueConverter
-    {
-        #region IValueConverter Members
-
-        /// <summary>
-        /// Converts a value
-        /// </summary>
-        /// <param name="value">The value produced by the binding source</param>
-        /// <param name="targetType">The type of the binding target property</param>
-        /// <param name="parameter">The converter parameter to use</param>
-        /// <param name="culture">The culture to use in the converter</param>
-        /// <returns></returns>
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value
-            bool v;
-
-            // if parses
-            if (value != null && bool.TryParse(value.ToString(), out v))
-            {
-                // if a parameter
-                if (parameter != null)
-                {
-                    // hold paramater
-                    bool p;
-
-                    // if parses
-                    if (bool.TryParse(parameter.ToString(), out p))
-                        // return converted value
-                        return v == p ? Visibility.Visible : Visibility.Hidden;
-                    throw new ArgumentException();
-                }
-
-                // return converted value
-                return v ? Visibility.Visible : Visibility.Hidden;
-            }
-
-            throw new ArgumentException();
-        }
-
-        /// <summary>
-        /// Converts a value
-        /// </summary>
-        /// <param name="value">The value produced by the binding target</param>
-        /// <param name="targetType">The type to convert to</param>
-        /// <param name="parameter">The converter parameter to use</param>
-        /// <param name="culture">The culture to use in the converter</param>
-        /// <returns></returns>
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // if a value
-            if (value != null)
-            {
-                // try and parse value
-                var v = (Visibility)Enum.Parse(typeof(Visibility), value.ToString());
-
-                // if a parameter
-                if (parameter != null)
-                {
-                    // hold paramater
-                    bool p;
-
-                    // if parses
-                    if (bool.TryParse(parameter.ToString(), out p))
-                        // return converted value
-                        return v == Visibility.Visible ? p : !p;
-                    throw new ArgumentException();
-                }
-
-                // return converted value
-                return v == Visibility.Visible ? true : false;
-            }
-
-            throw new ArgumentException();
-        }
-
-        #endregion
+#endregion
     }
 
     #endregion
-
-    /// <summary>
-    /// Delegate for handling bitmap callback
-    /// </summary>
-    /// <param name="bmp">The bitmap to pass in the callback</param>
-    /// <returns></returns>
-    public delegate bool BitmapCallback(Bitmap bmp);
-
-    /// <summary>
-    /// Delegate for handling lambda callback
-    /// </summary>
-    public delegate void LambdaCallback();
 }

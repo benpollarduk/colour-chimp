@@ -52,11 +52,11 @@
         <windows1:DoubleToBooleanConverter x:Key="doubleTheSameConverter" />
         <windows1:EGridModeToVerticalAlignmentConverter x:Key="gridAlignmentConverter" />
         <windows1:EColorSpaceToBooleanConverter x:Key="colorSpaceToBooleanConverter" />
-        <windows1:DoublePercentageToNormalisedDoubleConverter x:Key="normalisationConverter" />
+        <converters:DoublePercentageToNormalisedDoubleConverter x:Key="normalisationConverter" />
         <windows1:NotMaxDoublePercentageToBooleanConverter x:Key="maxDoublePercentageConverter" />
         <windows1:NotMinDoublePercentageToBooleanConverter x:Key="minDoublePercentageConverter" />
-        <windows1:DoublePercentageToDoubleDegreesConverter x:Key="degreesConverter" />
-        <windows1:DoublePercentageToByteConverter x:Key="percentageToByteConverter" />
+        <converters:DoublePercentageToDoubleDegreesConverter x:Key="degreesConverter" />
+        <converters:DoublePercentageToByteConverter x:Key="percentageToByteConverter" />
         <Style TargetType="{x:Type Label}">
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="White" />
