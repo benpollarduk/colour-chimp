@@ -7,7 +7,7 @@ namespace BP.ColourChimp.Classes.Sorting
     /// <summary>
     /// Provides a sorter for sorting rectangles by CMYK.
     /// </summary>
-    public class CYMKSorter : IRectangleSorter
+    public class CMYKSorter : IRectangleSorter
     {
         #region Implementation of IRectangleSorter
 

@@ -7,8 +7,6 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +18,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BP.ColourChimp.Classes;
-using BP.ColourChimp.Converters;
+using BP.ColourChimp.Classes.Sorting;
 using BP.ColourChimp.Extensions;
 using BP.ColourChimp.Properties;
 using Application = System.Windows.Application;
@@ -390,6 +388,15 @@ namespace BP.ColourChimp.Windows
         #endregion
 
         #region Methods
+
+        private void ShowColorInfoWindow(Color c)
+        {
+            var window = new ColorInfoWindow(c) { Owner = Application.Current.MainWindow };
+            window.ColorModificationComplete += cClorInfoWindow_ColorModificationComplete;
+            window.Closed += Window_Closed;
+            window.DisplayInfo(ColorSpace);
+            window.Show();
+        }
 
         private void LoadSettingsFromManifest()
         {
@@ -1634,347 +1641,264 @@ namespace BP.ColourChimp.Windows
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            // check the modifier key
             switch (e.Key)
             {
                 case ColorSelectionModesModifierKeyWPF:
+                    
+                    switch (Mode)
                     {
-                        // if color picking
-                        if (Mode == Mode.Pipette)
-                        {
-                            // end color picking
-                            Mode = defaultMode;
-                        }
-                        else if (Mode == Mode.ROIGather)
-                        {
-                            // not roi selecting
-                            Mode = defaultMode;
+                        case Mode.Pipette:
 
-                            // set bottom right
-                            roiSelectionBottomRight = getCurrentMousePositionOverVirtualScreen();
+                            Mode = defaultMode;
+                            break;
 
-                            // if we have two values
-                            if (roiSelectionTopLeft.HasValue)
+                        case Mode.ROIGather:
                             {
-                                // hold roi points
-                                int top, left, bottom, right;
+                                Mode = defaultMode;
+                                roiSelectionBottomRight = GetCurrentMousePositionOverVirtualScreen();
 
-                                // set points
-                                left = Math.Min(roiSelectionBottomRight.Value.X, roiSelectionTopLeft.Value.X);
-                                right = Math.Max(roiSelectionBottomRight.Value.X, roiSelectionTopLeft.Value.X);
-                                top = Math.Min(roiSelectionBottomRight.Value.Y, roiSelectionTopLeft.Value.Y);
-                                bottom = Math.Max(roiSelectionBottomRight.Value.Y, roiSelectionTopLeft.Value.Y);
+                                if (roiSelectionTopLeft.HasValue)
+                                {
+                                    var left = Math.Min(roiSelectionBottomRight.Value.X, roiSelectionTopLeft.Value.X);
+                                    var right = Math.Max(roiSelectionBottomRight.Value.X, roiSelectionTopLeft.Value.X);
+                                    var top = Math.Min(roiSelectionBottomRight.Value.Y, roiSelectionTopLeft.Value.Y);
+                                    var bottom = Math.Max(roiSelectionBottomRight.Value.Y, roiSelectionTopLeft.Value.Y);
 
-                                // begin gather of ROI - with actual top left, bottom right coordinates
-                                GatherAllPixelsInROI(top, left, bottom, right);
+                                    GatherAllPixelsInROI(top, left, bottom, right);
+                                }
+
+                                roiSelectionTopLeft = null;
+                                roiSelectionBottomRight = null;
+
+                                break;
                             }
-
-                            // release coordinates
-                            roiSelectionTopLeft = null;
-                            roiSelectionBottomRight = null;
-                        }
-
-                        break;
                     }
+
+                    break;
             }
         }
 
-        private void coloursGrid_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void ColoursGrid_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            // hit test to find rectangle we are over
-            var result = VisualTreeHelper.HitTest(sender as Visual, Mouse.GetPosition(sender as FrameworkElement));
+            var visual = sender as Visual;
 
-            // if a hit, and a rectangle
-            if (result != null &&
-                result.VisualHit is Rectangle)
+            if (visual == null)
+                return;
+
+            var hitTestResult = VisualTreeHelper.HitTest(visual, Mouse.GetPosition(sender as FrameworkElement));
+
+            if (!(hitTestResult?.VisualHit is Rectangle rectangle))
+                return;
+
+            var brush = rectangle.Fill as SolidColorBrush;
+
+            if (e.ChangedButton == MouseButton.Left)
             {
-                // if left button pressed
-                if (e.ChangedButton == MouseButton.Left)
+                if (Mode == Mode.Delete)
                 {
-                    // if deleting colors
-                    if (Mode == Mode.Delete)
+                    RemoveRectangle(rectangle);
+                }
+                else
+                {
+                    if (brush != null)
                     {
-                        // remove the rectangle
-                        RemoveRectangle(result.VisualHit as Rectangle);
-                    }
-                    else
-                    {
-                        // get sending border
-                        var hitElement = result.VisualHit as Rectangle;
+                        switch (ColorSpace)
+                        {
+                            case ColorSpace.ARGB:
+                                
+                                Alpha = brush.Color.A;
+                                Red = brush.Color.R;
+                                Green = brush.Color.G;
+                                Blue = brush.Color.B;
 
-                        // show message
-                        var sCB = hitElement.Fill as SolidColorBrush;
+                                break;
 
-                        // if brush found
-                        if (sCB != null)
-                            // select color space
-                            switch (ColorSpace)
-                            {
-                                case ColorSpace.ARGB:
-                                    {
-                                        // set as selected color
-                                        Alpha = sCB.Color.A;
-                                        Red = sCB.Color.R;
-                                        Green = sCB.Color.G;
-                                        Blue = sCB.Color.B;
+                            case ColorSpace.CMYK:
+                                
+                                var cymkColor = brush.Color.ToCMYK();
+                                Cyan = cymkColor.Cyan * 100;
+                                Magenta = cymkColor.Magenta * 100;
+                                Yellow = cymkColor.Yellow * 100;
+                                K = cymkColor.Key * 100;
 
-                                        break;
-                                    }
-                                case ColorSpace.CMYK:
-                                    {
-                                        // get cmyk 
-                                        var cymkColor = rgb2cmykConverter.Convert(sCB.Color, typeof(CMYKColor), null, null) as CMYKColor;
+                                break;
 
-                                        // update cmyk
-                                        Cyan = cymkColor.Cyan * 100;
-                                        Magenta = cymkColor.Magenta * 100;
-                                        Yellow = cymkColor.Yellow * 100;
-                                        K = cymkColor.Key * 100;
+                            case ColorSpace.HSV:
 
-                                        break;
-                                    }
-                                case ColorSpace.HSV:
-                                    {
-                                        // get hsv
-                                        var hsvColor = rgb2hsvConverter.Convert(sCB.Color, typeof(HSVColor), null, null) as HSVColor;
+                                var hsvColor = brush.Color.ToHSV();
+                                Hue = hsvColor.Hue * 100;
+                                Saturation = hsvColor.Saturation * 100;
+                                Value = hsvColor.Value * 100;
 
-                                        // update hsv
-                                        Hue = hsvColor.Hue * 100;
-                                        Saturation = hsvColor.Saturation * 100;
-                                        Value = hsvColor.Value * 100;
+                                break;
 
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        throw new NotImplementedException();
-                                    }
-                            }
+                            default:
+                                throw new NotImplementedException();
+                        }
                     }
                 }
-                else if (e.ChangedButton == MouseButton.Right)
-                {
-                    // get sending border
-                    var hitElement = result.VisualHit as Rectangle;
-
-                    // show message
-                    var sCB = hitElement.Fill as SolidColorBrush;
-
-                    // if brush found
-                    if (sCB != null)
-                        // show info
-                        showColorInfoWindow(sCB.Color);
-                }
+            }
+            else if (e.ChangedButton == MouseButton.Right)
+            {
+                if (brush != null)
+                    ShowColorInfoWindow(brush.Color);
             }
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            // focus the staus bar - a safe focus element so key downs have some relevance
             Keyboard.Focus(statusBar);
         }
 
-        private void incrementAlphaButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementAlphaButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Alpha = IncrementByte(Alpha);
         }
 
-        private void incrementRedButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementRedButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Red = IncrementByte(Red);
         }
 
-        private void incrementGreenButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementGreenButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Green = IncrementByte(Green);
         }
 
-        private void incrementBlueButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementBlueButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Blue = IncrementByte(Blue);
         }
 
-        private void deincrementBlueButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementBlueButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Blue = DeincrementByte(Blue);
         }
 
-        private void deincrementGreenButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementGreenButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Green = DeincrementByte(Green);
         }
 
-        private void deincrementRedButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementRedButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Red = DeincrementByte(Red);
         }
 
-        private void deincrementAlphaButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementAlphaButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Alpha = DeincrementByte(Alpha);
         }
 
-        private void incrementCyanButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementCyanButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Cyan = IncrementDouble(Cyan);
         }
 
-        private void incrementYellowButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementYellowButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Yellow = IncrementDouble(Yellow);
         }
 
-        private void incrementKeyButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementKeyButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             K = IncrementDouble(K);
         }
 
-        private void incrementMagentaButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementMagentaButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Magenta = IncrementDouble(Magenta);
         }
 
-        private void deincrementCyanButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementCyanButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Cyan = DecrementDouble(Cyan);
         }
 
-        private void deincrementMagentaButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementMagentaButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Magenta = DecrementDouble(Magenta);
         }
 
-        private void deincrementYellowButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementYellowButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Yellow = DecrementDouble(Yellow);
         }
 
-        private void deincrementKeyButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementKeyButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             K = DecrementDouble(K);
         }
 
-        private void incrementHueButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementHueButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Hue = IncrementDouble(Hue);
         }
 
-        private void incrementSaturationButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementSaturationButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Saturation = IncrementDouble(Saturation);
         }
 
-        private void incrementValueButton_Click(object sender, RoutedEventArgs e)
+        private void IncrementValueButton_Click(object sender, RoutedEventArgs e)
         {
-            // increment
             Value = IncrementDouble(Value);
         }
 
-        private void deincrementHueButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementHueButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Hue = DecrementDouble(Hue);
         }
 
-        private void deincrementSaturationButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementSaturationButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Saturation = DecrementDouble(Saturation);
         }
 
-        private void deincrementValueButton_Click(object sender, RoutedEventArgs e)
+        private void DecrementValueButton_Click(object sender, RoutedEventArgs e)
         {
-            // deincrement
             Value = DecrementDouble(Value);
         }
 
         private void sFD_FileOk(object sender, CancelEventArgs e)
         {
-            // get dialog
             var sfd = sender as SaveFileDialog;
+
+            if (sfd == null)
+                return;
 
             try
             {
-                // set path
-                defaultPath = sfd.FileName.Substring(0, sfd.FileName.LastIndexOf("\\") - 1);
-
-                // export
+                defaultPath = sfd.FileName.Substring(0, sfd.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
                 ExportPatchwork(sfd.FileName);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // show status
-                Status = "Error: Invalid file name";
+                Status = $"Exception caught saving file: {e.Message}";
             }
         }
 
         private void oFD_FileOk(object sender, CancelEventArgs e)
         {
-            // get dialog
             var ofd = sender as OpenFileDialog;
+
+            if (ofd == null)
+                return;
 
             try
             {
-                // set path
-                defaultPath = ofd.FileName.Substring(0, ofd.FileName.LastIndexOf("\\") - 1);
-
-                // import
+                defaultPath = ofd.FileName.Substring(0, ofd.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
                 ImportImage(ofd.FileName);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                // show status
-                Status = "Error: Invalid file name";
+                Status = $"Exception caught importing file: {e.Message}";
             }
         }
 
-        private void infoButton_Click(object sender, RoutedEventArgs e)
+        private void InfoButton_Click(object sender, RoutedEventArgs e)
         {
-            // show info
-            showColorInfoWindow(Color.FromArgb(Alpha, Red, Green, Blue));
-        }
-
-        /// <summary>
-        /// Show a color informaition window for a specified color
-        /// </summary>
-        /// <param name="c">The color to view the info of</param>
-        private void showColorInfoWindow(Color c)
-        {
-            // create new window
-            var window = new ColorInfoWindow(c);
-
-            // set the owner
-            window.Owner = Application.Current.MainWindow;
-
-            // modification event
-            window.ColorModificationComplete += cClorInfoWindow_ColorModificationComplete;
-
-            // close event
-            window.Closed += Window_Closed;
-
-            // display the info
-            window.DisplayInfo(ColorSpace);
-
-            // show the window
-            window.Show();
+            ShowColorInfoWindow(Color.FromArgb(Alpha, Red, Green, Blue));
         }
 
 #region MenuItems
@@ -2039,380 +1963,173 @@ namespace BP.ColourChimp.Windows
 
 #endregion
 
-#region CommandCallbacks
+        #region CommandCallbacks
 
-        private void imortComandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void ImportComandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // show dialog
             ShowImportDialog();
         }
 
-        private void exportCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void ExportCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // show dialog
             ShowExportDialog();
         }
 
-        private void exitCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void ExitCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // exit with 0 code
             Application.Current.Shutdown(0);
         }
 
-        private void populateBalancedRedsCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateBalancedRedsCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
+
             Populate(PopulationModes.Reds);
         }
 
-        private void populateBalancedGreensCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateBalancedGreensCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.Greens);
         }
 
-        private void populateBalancedBuesCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateBalancedBuesCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.Blues);
         }
 
-        private void populateBalancedCyansCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateBalancedCyansCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.Cyans);
         }
 
-        private void populateBalancedMagentasCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateBalancedMagentasCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.Magentas);
         }
 
-        private void populateBalancedYellowsCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateBalancedYellowsCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.Yellows);
         }
 
-        private void populateGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.Grayscale);
         }
 
-        private void populateSystemColoursCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulateSystemColoursCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.SystemColors);
         }
 
-        private void sortRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void SortRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // sort colors
-            SortColors(sortRectanglesByARGBColor);
+            SortColors(new ARGBSorter().Sort);
         }
 
-        private void sortCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void SortCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // sort colors
-            SortColors(sortRectanglesByCMYKColor);
+            SortColors(new CMYKSorter().Sort);
         }
 
-        private void sortHSVCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void SortHSVCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // sort colors
-            SortColors(sortRectanglesByHSV);
+            SortColors(new HSVSorter().Sort);
         }
 
-        private void sortGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void SortGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // sort colors
-            SortColors(sortRectanglesByRelativeGrayscale);
+            SortColors(new GreyscaleSorter().Sort);
         }
 
         private void randomizeCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // sort colors
-            SortColors(sortRectanglesByRandom);
+            SortColors(new RandomSorter(RandomGenerator).Sort);
         }
 
-        private void discardNonDominantRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardNonDominantRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // filter
             Filter(ChannelDominanceModes.NonDominantRGB, ChannelDominance);
         }
 
-        private void discardDominantRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardDominantRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // filter
             Filter(ChannelDominanceModes.DominantRGB, ChannelDominance);
         }
 
-        private void discardNonDominantCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardNonDominantCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // filter
             Filter(ChannelDominanceModes.NonDominantCMY, ChannelDominance);
         }
 
-        private void discardDominantCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardDominantCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // filter
             Filter(ChannelDominanceModes.DominantCMY, ChannelDominance);
         }
 
-        private void discardNonDominantGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardNonDominantGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // filter
             Filter(ChannelDominanceModes.NonGray, 0.0d);
         }
 
-        private void discardDominantGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardDominantGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // filter
             Filter(ChannelDominanceModes.Gray, 0.0d);
         }
 
-        private void discardDuplicatesCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void DiscardDuplicatesCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // remove duplicates
             RemoveDuplicateColors();
         }
 
-        private void removeLastCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void RemoveLastCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // clear last
             ClearLast();
         }
 
-        private void removalAllCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void RemovalAllCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // clear all
             Clear();
         }
 
-        private void aboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        public void AboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // show modal
-            var about = new AboutWindow();
+            var about = new AboutWindow { Owner = this };
 
-            // set owner
-            about.Owner = this;
-
-            // if can't be displayed ok
             if (Top + ActualHeight >= SystemParameters.PrimaryScreenHeight)
-                // modify the start up location
                 about.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 
-            // show and wait for close
             about.ShowDialog();
         }
 
-        private void adCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void AddCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // add color
             AddColor(Color.FromArgb(Alpha, Red, Green, Blue));
         }
 
-        private void gatherROICommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void GatherROICommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // start roi
             Mode = Mode.ROIGather;
         }
 
-        private void gatherFullScreenCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void GatherFullScreenCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // capture full
             GatherAllPixelsInROI(0, 0, SystemInformation.VirtualScreen.Height, SystemInformation.VirtualScreen.Width);
         }
 
-        private void populartePresentationFrameworkCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulartePresentationFrameworkCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // populate
             Populate(PopulationModes.PresentationFramework);
         }
 
-        private void selectiveRemovalCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        public void SelectiveRemovalCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            // put into mode
             Mode = Mode.Delete;
         }
 
-#endregion
+        #endregion
     }
 
-#region ValidationRules
-
-    /// <summary>
-    /// Validation rule for bytes
-    /// </summary>
-    public class ByteValidationRule : ValidationRule
-    {
-        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
-        {
-            // if some data
-            if (value == null ||
-                string.IsNullOrEmpty(value.ToString()))
-                // return result
-                return new ValidationResult(false, "No data");
-
-            // hold byte
-            byte b;
-
-            // try parse
-            if (byte.TryParse(value.ToString(), out b))
-                // valid
-                return ValidationResult.ValidResult;
-            return new ValidationResult(false, "Data is not a byte");
-        }
-    }
-
-    /// <summary>
-    /// Validation rule for double percentages
-    /// </summary>
-    public class DoublePercentageValidationRule : ValidationRule
-    {
-        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
-        {
-            // if some data
-            if (value == null ||
-                string.IsNullOrEmpty(value.ToString()))
-                // return result
-                return new ValidationResult(false, "No data");
-
-            // hold double
-            double d;
-
-            // try parse
-            if (double.TryParse(value.ToString(), out d))
-            {
-                // if in range
-                if (d >= 0 && d <= 100)
-                    // valid
-                    return ValidationResult.ValidResult;
-                return new ValidationResult(false, "Value is outside on 0-100 range. Whilst this is still a percentage, it is not valid for this input");
-            }
-
-            // return result
-            return new ValidationResult(false, "Data is not a percentage");
-        }
-    }
-
-    /// <summary>
-    /// Validation rule for normalised doubles
-    /// </summary>
-    public class NormalisedDoubleValidationRule : ValidationRule
-    {
-        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
-        {
-            // if some data
-            if (value == null ||
-                string.IsNullOrEmpty(value.ToString()))
-                // return result
-                return new ValidationResult(false, "No data");
-
-            // hold double
-            double d;
-
-            // try parse
-            if (double.TryParse(value.ToString(), out d))
-            {
-                // if in range
-                if (d >= 0.0d && d <= 1.0d)
-                    // valid
-                    return ValidationResult.ValidResult;
-                return new ValidationResult(false, "Value is outside on 0.0-1.0 range. Whilst this is still a double, it is not normalised");
-            }
-
-            // return result
-            return new ValidationResult(false, "Data is not a normlalised double");
-        }
-    }
-
-    /// <summary>
-    /// Validation rule for doubles representing degrees
-    /// </summary>
-    public class DegreeDoubleValidationRule : ValidationRule
-    {
-        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
-        {
-            // if some data
-            if (value == null ||
-                string.IsNullOrEmpty(value.ToString()))
-                // return result
-                return new ValidationResult(false, "No data");
-
-            // hold double
-            double d;
-
-            // try parse
-            if (double.TryParse(value.ToString(), out d))
-            {
-                // if in range
-                if (d >= 0.0d && d <= 360.0d)
-                    // valid
-                    return ValidationResult.ValidResult;
-                return new ValidationResult(false, "Value is outside on 0.0-360.0 range. Whilst this is still a degree, it is not within range");
-            }
-
-            // return result
-            return new ValidationResult(false, "Data is not a normlalised double");
-        }
-    }
-
-    /// <summary>
-    /// Validation rule for hex bytes
-    /// </summary>
-    public class HexByteValidationRule : ValidationRule
-    {
-        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
-        {
-            // if some data
-            if (value == null ||
-                string.IsNullOrEmpty(value.ToString()))
-                // return result
-                return new ValidationResult(false, "No data");
-
-            // itterate all aceptable characters
-            foreach (var c in value.ToString().ToUpper())
-                // if not hex
-                if (!"0123456789ABCDEF".Contains(c))
-                    // return result
-                    return new ValidationResult(false, "Value is not hex");
-
-            // hold Int32
-            var data = Convert.ToInt32(value.ToString(), 16);
-
-            // if in range
-            if (data >= 0 && data <= 255)
-                // valid
-                return ValidationResult.ValidResult;
-            return new ValidationResult(false, "Value is outside on 0-255 range");
-        }
-    }
-
-    /// <summary>
-    /// Validation rule to ensure a hex string is a byte
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(bool))]
-    public class HexStringIsByteValidationRule : ValidationRule
-    {
-        public override ValidationResult Validate(object value, CultureInfo cultureInfo)
-        {
-            // hold conversion byte
-            byte b;
-
-            // get if valid
-            var isValid = byte.TryParse(value.ToString(), NumberStyles.AllowHexSpecifier, null, out b);
-
-            // return result
-            return new ValidationResult(isValid, isValid ? string.Empty : "The string spoecified was not a hex number between 0 and 255");
-        }
-    }
-
-#endregion
-
--#region Converters
+#region Converters
 
     /// <summary>
     /// Converts a Double to a Visibility. The Double provided as the value is compared to the Double provided as the parameter. If the value >= the parameter Visibility.Visible is returned, else Visibility.Hidden is returned
@@ -2957,6 +2674,4 @@ namespace BP.ColourChimp.Windows
 
 #endregion
     }
-
-    #endregion
 }

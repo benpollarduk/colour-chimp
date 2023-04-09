@@ -6,6 +6,7 @@
         xmlns:converters="clr-namespace:BP.ColourChimp.Converters"
         xmlns:classes="clr-namespace:BP.ColourChimp.Classes"
         xmlns:windows1="clr-namespace:BP.ColourChimp.Windows"
+        xmlns:validation="clr-namespace:BP.ColourChimp.Validation"
         Title="Colour Chimp" Height="650" MinHeight="550" Width="650" MinWidth="650" SizeToContent="Manual"
         WindowStartupLocation="CenterScreen" Background="{StaticResource backgroundBrush}"
         DataContext="{Binding RelativeSource={RelativeSource Self}}" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp"
@@ -89,41 +90,41 @@
         <CommandBinding x:Name="importComandBinding" Command="{StaticResource importCommand}"
                         Executed="imortComandBinding_Executed" />
         <CommandBinding x:Name="exportCommandBinding" Command="{StaticResource exportCommand}"
-                        Executed="exportCommandBinding_Executed" />
+                        Executed="ExportCommandBinding_Executed" />
         <CommandBinding x:Name="exitCommandBinding" Command="{StaticResource exitCommand}"
-                        Executed="exitCommandBinding_Executed" />
+                        Executed="ExitCommandBinding_Executed" />
         <CommandBinding x:Name="adCommandBinding" Command="{StaticResource addCommand}"
                         Executed="adCommandBinding_Executed" />
         <CommandBinding x:Name="populateBalancedRedsCommandBinding"
                         Command="{StaticResource populateBalancedRedsCommand}"
-                        Executed="populateBalancedRedsCommandBinding_Executed" />
+                        Executed="PopulateBalancedRedsCommandBinding_Executed" />
         <CommandBinding x:Name="populateBalancedGreensCommandBinding"
                         Command="{StaticResource populateBalancedGreensCommand}"
-                        Executed="populateBalancedGreensCommandBinding_Executed" />
+                        Executed="PopulateBalancedGreensCommandBinding_Executed" />
         <CommandBinding x:Name="populateBalancedBuesCommandBinding"
                         Command="{StaticResource populateBalancedBluesCommand}"
-                        Executed="populateBalancedBuesCommandBinding_Executed" />
+                        Executed="PopulateBalancedBuesCommandBinding_Executed" />
         <CommandBinding x:Name="populateBalancedCyansCommandBinding"
                         Command="{StaticResource populateBalancedCyansCommand}"
-                        Executed="populateBalancedCyansCommandBinding_Executed" />
+                        Executed="PopulateBalancedCyansCommandBinding_Executed" />
         <CommandBinding x:Name="populateBalancedMagentasCommandBinding"
                         Command="{StaticResource populateBalancedMagentasCommand}"
-                        Executed="populateBalancedMagentasCommandBinding_Executed" />
+                        Executed="PopulateBalancedMagentasCommandBinding_Executed" />
         <CommandBinding x:Name="populateBalancedYellowsCommandBinding"
                         Command="{StaticResource populateBalancedYellowsCommand}"
-                        Executed="populateBalancedYellowsCommandBinding_Executed" />
+                        Executed="PopulateBalancedYellowsCommandBinding_Executed" />
         <CommandBinding x:Name="populateGrayscaleCommandBinding" Command="{StaticResource populateGrayscaleCommand}"
-                        Executed="populateGrayscaleCommandBinding_Executed" />
+                        Executed="PopulateGrayscaleCommandBinding_Executed" />
         <CommandBinding x:Name="populatePresentationFrameworkCommandBinding"
                         Command="{StaticResource populatePresentationFrameworkColoursCommand}"
                         Executed="populartePresentationFrameworkCommandBinding_Executed" />
         <CommandBinding x:Name="populateSystemColoursCommandBinding"
                         Command="{StaticResource populateSystemColoursCommand}"
-                        Executed="populateSystemColoursCommandBinding_Executed" />
+                        Executed="PopulateSystemColoursCommandBinding_Executed" />
         <CommandBinding x:Name="sortRGBCommandBinding" Command="{StaticResource sortRGBCommand}"
                         Executed="sortRGBCommandBinding_Executed" />
         <CommandBinding x:Name="sortCMYCommandBinding" Command="{StaticResource sortCMYCommand}"
-                        Executed="sortCMYCommandBinding_Executed" />
+                        Executed="SortCMYCommandBinding_Executed" />
         <CommandBinding x:Name="sortHSVCommandBinding" Command="{StaticResource sortHSVCommand}"
                         Executed="sortHSVCommandBinding_Executed" />
         <CommandBinding x:Name="sortGrayscaleCommandBinding" Command="{StaticResource sortRelativeGrayscaleCommand}"
@@ -132,17 +133,17 @@
                         Executed="randomizeCommandBinding_Executed" />
         <CommandBinding x:Name="discardNonDominantRGBCommandBinding"
                         Command="{StaticResource discardNonDominantRGBCommand}"
-                        Executed="discardNonDominantRGBCommandBinding_Executed" />
+                        Executed="DiscardNonDominantRGBCommandBinding_Executed" />
         <CommandBinding x:Name="discardDominantRGBCommandBinding" Command="{StaticResource discardDominantRGBCommand}"
-                        Executed="discardDominantRGBCommandBinding_Executed" />
+                        Executed="DiscardDominantRGBCommandBinding_Executed" />
         <CommandBinding x:Name="discardNonDominantCMYCommandBinding"
                         Command="{StaticResource discardNonDominantCMYCommand}"
-                        Executed="discardNonDominantCMYCommandBinding_Executed" />
+                        Executed="DiscardNonDominantCMYCommandBinding_Executed" />
         <CommandBinding x:Name="discardDominantCMYCommandBinding" Command="{StaticResource discardDominantCMYCommand}"
-                        Executed="discardDominantCMYCommandBinding_Executed" />
+                        Executed="DiscardDominantCMYCommandBinding_Executed" />
         <CommandBinding x:Name="discardNonDominantGrayscaleCommandBinding"
                         Command="{StaticResource discardNonDominantGrayscaleCommand}"
-                        Executed="discardNonDominantGrayscaleCommandBinding_Executed" />
+                        Executed="DiscardNonDominantGrayscaleCommandBinding_Executed" />
         <CommandBinding x:Name="discardDominantGrayscaleCommandBinding"
                         Command="{StaticResource discardDominantGrayscaleCommand}"
                         Executed="discardDominantGrayscaleCommandBinding_Executed" />
@@ -485,7 +486,7 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
                 <UniformGrid Name="coloursGrid" Cursor="Hand"
                              VerticalAlignment="{Binding Path=GridMode, Mode=OneWay, Converter={StaticResource gridAlignmentConverter}}"
-                             FocusVisualStyle="{x:Null}" PreviewMouseDown="coloursGrid_PreviewMouseDown">
+                             FocusVisualStyle="{x:Null}" PreviewMouseDown="ColoursGrid_PreviewMouseDown">
                     <UniformGrid.Resources>
                         <Style x:Key="sizeableRectangleStyle" TargetType="Rectangle">
                             <Setter Property="Stroke" Value="Transparent" />
@@ -549,7 +550,7 @@
                     <Label Name="hashTitleLabel" Content="#" Grid.Row="3" Grid.Column="1" />
                     <Label Name="aTitleLabel" Content="A:" Grid.Row="1" Grid.Column="2" />
                     <Button Name="incrementAlphaButton" Content="+" Grid.Row="2" Grid.Column="2"
-                            Click="incrementAlphaButton_Click">
+                            Click="IncrementAlphaButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Alpha" Mode="OneWay" Converter="{StaticResource maxByteConverter}" />
@@ -563,7 +564,7 @@
                             <Binding Path="Alpha" Mode="TwoWay" Converter="{StaticResource hexConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:HexByteValidationRule />
+                                    <validation:HexByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -573,7 +574,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Alpha" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:ByteValidationRule />
+                                    <validation:ByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -584,7 +585,7 @@
                             <Binding Path="Alpha" Mode="TwoWay" Converter="{StaticResource percentageConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -600,7 +601,7 @@
                     </Button>
                     <Label Name="rTitleLabel" Content="R:" Grid.Row="1" Grid.Column="3" />
                     <Button Name="incrementRedButton" Content="+" Grid.Row="2" Grid.Column="3"
-                            Click="incrementRedButton_Click">
+                            Click="IncrementRedButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Red" Mode="OneWay" Converter="{StaticResource maxByteConverter}" />
@@ -614,7 +615,7 @@
                             <Binding Path="Red" Mode="TwoWay" Converter="{StaticResource hexConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:HexByteValidationRule />
+                                    <validation:HexByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -624,7 +625,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Red" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:ByteValidationRule />
+                                    <validation:ByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -635,7 +636,7 @@
                             <Binding Path="Red" Mode="TwoWay" Converter="{StaticResource percentageConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -651,7 +652,7 @@
                     </Button>
                     <Label Name="gTitleLabel" Content="G:" Grid.Row="1" Grid.Column="4" />
                     <Button Name="incrementGreenButton" Content="+" Grid.Row="2" Grid.Column="4"
-                            Click="incrementGreenButton_Click">
+                            Click="IncrementGreenButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Green" Mode="OneWay" Converter="{StaticResource maxByteConverter}" />
@@ -665,7 +666,7 @@
                             <Binding Path="Green" Mode="TwoWay" Converter="{StaticResource hexConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:HexByteValidationRule />
+                                    <validation:HexByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -675,7 +676,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Green" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:ByteValidationRule />
+                                    <validation:ByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -686,7 +687,7 @@
                             <Binding Path="Green" Mode="TwoWay" Converter="{StaticResource percentageConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -702,7 +703,7 @@
                     </Button>
                     <Label Name="bTitleLabel" Content="B:" Grid.Row="1" Grid.Column="5" />
                     <Button Name="incrementBlueButton" Content="+" Grid.Row="2" Grid.Column="5"
-                            Click="incrementBlueButton_Click">
+                            Click="IncrementBlueButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Blue" Mode="OneWay" Converter="{StaticResource maxByteConverter}" />
@@ -716,7 +717,7 @@
                             <Binding Path="Blue" Mode="TwoWay" Converter="{StaticResource hexConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:HexByteValidationRule />
+                                    <validation:HexByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -726,7 +727,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Blue" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:ByteValidationRule />
+                                    <validation:ByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -737,7 +738,7 @@
                             <Binding Path="Blue" Mode="TwoWay" Converter="{StaticResource percentageConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -810,7 +811,7 @@
                         </Button.IsEnabled>
                     </Button>
                     <Button Name="incrementYellowButton" Content="+" Grid.Row="1" Grid.Column="3"
-                            Click="incrementYellowButton_Click">
+                            Click="IncrementYellowButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Yellow" Mode="OneWay"
@@ -835,7 +836,7 @@
                             <Binding Path="Cyan" Mode="TwoWay" Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -846,7 +847,7 @@
                             <Binding Path="Magenta" Mode="TwoWay" Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -857,7 +858,7 @@
                             <Binding Path="Yellow" Mode="TwoWay" Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -868,7 +869,7 @@
                             <Binding Path="K" Mode="TwoWay" Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -879,7 +880,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Cyan" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -889,7 +890,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Magenta" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -899,7 +900,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Yellow" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -909,7 +910,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="K" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -994,7 +995,7 @@
                     <Label Name="hsvPercentTitleLabel" Content="%" Grid.Row="3" Grid.Column="0" />
                     <Label Name="hsvDegreeNormalisedDoubleTitleLabel" Content="D, N ,B" Grid.Row="4" Grid.Column="0" />
                     <Button Name="incrementHueButton" Content="+" Grid.Row="1" Grid.Column="1"
-                            Click="incrementHueButton_Click">
+                            Click="IncrementHueButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Hue" Mode="OneWay"
@@ -1004,7 +1005,7 @@
                         </Button.IsEnabled>
                     </Button>
                     <Button Name="incrementSaturationButton" Content="+" Grid.Row="1" Grid.Column="2"
-                            Click="incrementSaturationButton_Click">
+                            Click="IncrementSaturationButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Saturation" Mode="OneWay"
@@ -1014,7 +1015,7 @@
                         </Button.IsEnabled>
                     </Button>
                     <Button Name="incrementValueButton" Content="+" Grid.Row="1" Grid.Column="3"
-                            Click="incrementValueButton_Click">
+                            Click="IncrementValueButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Value" Mode="OneWay"
@@ -1029,7 +1030,7 @@
                             <Binding Path="Hue" Mode="TwoWay" Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1041,7 +1042,7 @@
                                      Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1052,7 +1053,7 @@
                             <Binding Path="Value" Mode="TwoWay" Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1062,7 +1063,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Hue" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1072,7 +1073,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Saturation" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1082,7 +1083,7 @@
                         <controls:ClickSelectTextBox.Text>
                             <Binding Path="Value" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DoublePercentageValidationRule />
+                                    <validation:DoublePercentageValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1093,7 +1094,7 @@
                             <Binding Path="Hue" Mode="TwoWay" Converter="{StaticResource degreesConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:DegreeDoubleValidationRule />
+                                    <validation:DegreeDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1105,7 +1106,7 @@
                                      Converter="{StaticResource normalisationConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:NormalisedDoubleValidationRule />
+                                    <validation:NormalisedDoubleValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1116,7 +1117,7 @@
                             <Binding Path="Value" Mode="TwoWay" Converter="{StaticResource percentageToByteConverter}"
                                      UpdateSourceTrigger="PropertyChanged">
                                 <Binding.ValidationRules>
-                                    <windows1:ByteValidationRule />
+                                    <validation:ByteValidationRule />
                                 </Binding.ValidationRules>
                             </Binding>
                         </controls:ClickSelectTextBox.Text>
@@ -1142,7 +1143,7 @@
                         </Button.IsEnabled>
                     </Button>
                     <Button Name="deincrementValueButton" Content="-" Grid.Row="5" Grid.Column="3"
-                            Click="deincrementValueButton_Click">
+                            Click="DecrementValueButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource multiAndConverter}">
                                 <Binding Path="Value" Mode="OneWay"
@@ -1168,9 +1169,9 @@
                         <Border Name="swatchBorder" BorderThickness="0" />
                     </Border>
                     <Button Name="pickColorButton" Content="Pick Colour" Grid.Row="1" Grid.Column="0"
-                            PreviewMouseDown="pickColorButton_PreviewMouseDown" />
-                    <Button Name="infoButton" Content="Info..." Grid.Row="1" Grid.Column="1" Click="infoButton_Click" />
-                    <Button Name="addButton" Content="Add" Grid.RowSpan="3" Grid.Column="2" Click="addButton_Click"
+                            PreviewMouseDown="PickColorButton_PreviewMouseDown" />
+                    <Button Name="infoButton" Content="Info..." Grid.Row="1" Grid.Column="1" Click="InfoButton_Click" />
+                    <Button Name="addButton" Content="Add" Grid.RowSpan="3" Grid.Column="2" Click="AddButton_Click"
                             TabIndex="4" />
                     <Button Name="resetButton" Content="Reset" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
                             Click="resetButton_Click" />
