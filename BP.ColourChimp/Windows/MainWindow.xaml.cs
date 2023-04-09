@@ -392,7 +392,7 @@ namespace BP.ColourChimp.Windows
         private void ShowColorInfoWindow(Color c)
         {
             var window = new ColorInfoWindow(c) { Owner = Application.Current.MainWindow };
-            window.ColorModificationComplete += cClorInfoWindow_ColorModificationComplete;
+            window.ColorModificationComplete += ColorInfoWindow_ColorModificationComplete;
             window.Closed += Window_Closed;
             window.DisplayInfo(ColorSpace);
             window.Show();
@@ -425,10 +425,7 @@ namespace BP.ColourChimp.Windows
             Settings.Default.Save();
         }
 
-        /// <summary>
-        /// Clear all colors from the grid.
-        /// </summary>
-        public void Clear()
+        private void Clear()
         {
             if (coloursGrid.Children.Count == 0)
                 return;
@@ -441,10 +438,7 @@ namespace BP.ColourChimp.Windows
             Status = "All colours cleared";
         }
 
-        /// <summary>
-        /// Clear the last color from the grid.
-        /// </summary>
-        public void ClearLast()
+        private void ClearLast()
         {
             if (coloursGrid.Children.Count == 0)
                 return;
@@ -454,7 +448,7 @@ namespace BP.ColourChimp.Windows
 
         private void ShowExportDialog()
         {
-            var sFD = new SaveFileDialog
+            var saveFileDialog = new SaveFileDialog
             {
                 Title = "Export image as...",
                 OverwritePrompt = true,
@@ -463,13 +457,25 @@ namespace BP.ColourChimp.Windows
                 InitialDirectory = defaultPath
             };
 
-            sFD.FileOk += sFD_FileOk;
-            sFD.ShowDialog();
+            saveFileDialog.FileOk += (s, e) =>
+            {
+                try
+                {
+                    defaultPath = saveFileDialog.FileName.Substring(0, saveFileDialog.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
+                    ExportPatchwork(saveFileDialog.FileName);
+                }
+                catch (Exception e)
+                {
+                    Status = $"Exception caught saving file: {e.Message}";
+                }
+            };
+
+            saveFileDialog.ShowDialog();
         }
 
         private void ShowImportDialog()
         {
-            var oFD = new OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Title = "Import an image...", 
                 DefaultExt = "*.png", 
@@ -477,8 +483,19 @@ namespace BP.ColourChimp.Windows
                 InitialDirectory = defaultPath
             };
 
-            oFD.FileOk += oFD_FileOk;
-            oFD.ShowDialog();
+            openFileDialog.FileOk += (s, e) =>
+            {
+                try
+                {
+                    defaultPath = openFileDialog.FileName.Substring(0, openFileDialog.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
+                    ImportImage(openFileDialog.FileName);
+                }
+                catch (Exception e)
+                {
+                    Status = $"Exception caught importing file: {e.Message}";
+                }
+            };
+            openFileDialog.ShowDialog();
         }
 
         private bool ExportPatchwork(string path)
@@ -1549,11 +1566,10 @@ namespace BP.ColourChimp.Windows
             if (colorInfoWindow == null)
                 return;
 
-            colorInfoWindow.ColorModificationComplete -= cClorInfoWindow_ColorModificationComplete;
-            colorInfoWindow.ColorModificationComplete -= Window_Closed;
+            colorInfoWindow.ColorModificationComplete -= ColorInfoWindow_ColorModificationComplete;
         }
 
-        private void cClorInfoWindow_ColorModificationComplete(object sender, Color color)
+        private void ColorInfoWindow_ColorModificationComplete(object sender, Color color)
         {
             AddColor(color);
         }
@@ -1858,42 +1874,6 @@ namespace BP.ColourChimp.Windows
         private void DecrementValueButton_Click(object sender, RoutedEventArgs e)
         {
             Value = DecrementDouble(Value);
-        }
-
-        private void sFD_FileOk(object sender, CancelEventArgs e)
-        {
-            var sfd = sender as SaveFileDialog;
-
-            if (sfd == null)
-                return;
-
-            try
-            {
-                defaultPath = sfd.FileName.Substring(0, sfd.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
-                ExportPatchwork(sfd.FileName);
-            }
-            catch (Exception e)
-            {
-                Status = $"Exception caught saving file: {e.Message}";
-            }
-        }
-
-        private void oFD_FileOk(object sender, CancelEventArgs e)
-        {
-            var ofd = sender as OpenFileDialog;
-
-            if (ofd == null)
-                return;
-
-            try
-            {
-                defaultPath = ofd.FileName.Substring(0, ofd.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
-                ImportImage(ofd.FileName);
-            }
-            catch (Exception e)
-            {
-                Status = $"Exception caught importing file: {e.Message}";
-            }
         }
 
         private void InfoButton_Click(object sender, RoutedEventArgs e)
