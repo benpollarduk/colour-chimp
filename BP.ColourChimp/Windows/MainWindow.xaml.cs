@@ -50,7 +50,6 @@ namespace BP.ColourChimp.Windows
         private const Key DecrementAlphaKeyWPF = Key.Down;
         private const Key IncrementBrightnessKeyWPF = Key.Right;
         private const Key DeccrementBrightnessKeyWPF = Key.Left;
-        private const double FixedGridColoumns = 3d;
 
         #endregion
 
@@ -247,9 +246,9 @@ namespace BP.ColourChimp.Windows
         /// <summary>
         /// Get of set the number of fixed columns. This is only applicable when the GridMode property is set to MaintainSize. This is a dependency property.
         /// </summary>
-        public double FixedColumns
+        public int FixedColumns
         {
-            get { return (double)GetValue(FixedColumnsProperty); }
+            get { return (int)GetValue(FixedColumnsProperty); }
             set { SetValue(FixedColumnsProperty, value); }
         }
 
@@ -364,7 +363,7 @@ namespace BP.ColourChimp.Windows
         /// <summary>
         /// Identifies the MainWindow.FixedColumns property.
         /// </summary>
-        public static readonly DependencyProperty FixedColumnsProperty = DependencyProperty.Register("FixedColumns", typeof(double), typeof(MainWindow), new PropertyMetadata(FixedGridColoumns, OnFixedColumnsPropertyChanged));
+        public static readonly DependencyProperty FixedColumnsProperty = DependencyProperty.Register("FixedColumns", typeof(int), typeof(MainWindow), new PropertyMetadata(3, OnFixedColumnsPropertyChanged));
 
         /// <summary>
         /// Identifies the MainWindow.ColorSpace property.
@@ -807,7 +806,7 @@ namespace BP.ColourChimp.Windows
                     case GridMode.FitToArea:
                         break;
                     case GridMode.MaintainSize:
-                        r.Style = ColoursGrid.FindResource("squareRectangleStyle") as Style;
+                        r.Style = ColoursGrid.FindResource("SquareRectangleStyle") as Style;
                         break;
                     default:
                         throw new NotImplementedException();
@@ -1953,7 +1952,7 @@ namespace BP.ColourChimp.Windows
             Clear();
         }
 
-        public void AboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        public void AboutCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             var about = new AboutWindow { Owner = this };
 
@@ -1986,6 +1985,12 @@ namespace BP.ColourChimp.Windows
         public void SelectiveRemovalCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             Mode = Mode.Delete;
+        }
+
+        private void SetGridColumnsCommandBinding_OnExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (int.TryParse(e?.Parameter?.ToString() ?? string.Empty, out var columns))
+                FixedColumns = columns;
         }
 
         #endregion

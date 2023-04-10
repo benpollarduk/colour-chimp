@@ -45,6 +45,7 @@
             <RoutedUICommand x:Key="GatherROICommand" Text="Screen Region..."/>
             <RoutedUICommand x:Key="GatherFullScreenCommand" Text="Current Screen"/>
             <RoutedUICommand x:Key="AboutCommand" Text="About Colour Chimp..."/>
+            <RoutedUICommand x:Key="SetGridColumnsCommand"/>
             <converters:ByteToHexStringConverter x:Key="ByteToHexStringConverter"/>
             <converters:ByteToDoublePercentConverter x:Key="ByteToDoublePercentConverter"/>
             <converters:GridModeToVerticalAlignmentConverter x:Key="GridModeToVerticalAlignmentConverter"/>
@@ -116,7 +117,8 @@
         <CommandBinding x:Name="RemovalAllCommandBinding" Command="{StaticResource RemoveAllCommand}" Executed="RemovalAllCommandBinding_Executed"/>
         <CommandBinding x:Name="GatherROICommandBinding" Command="{StaticResource GatherROICommand}" Executed="GatherROICommandBinding_Executed"/>
         <CommandBinding x:Name="GatherFullScreenCommandBinding" Command="{StaticResource GatherFullScreenCommand}" Executed="GatherFullScreenCommandBinding_Executed"/>
-        <CommandBinding x:Name="AboutCommand" Command="{StaticResource AboutCommand}" Executed="AboutCommand_Executed"/>
+        <CommandBinding x:Name="AboutCommandBinding" Command="{StaticResource AboutCommand}" Executed="AboutCommandBinding_Executed"/>
+        <CommandBinding x:Name="SetGridColumnsCommandBinding" Command="{StaticResource SetGridColumnsCommand}" Executed="SetGridColumnsCommandBinding_OnExecuted"/>
     </Window.CommandBindings>
     <Window.InputBindings>
         <KeyBinding Command="{StaticResource SortRGBCommand}" Gesture="Ctrl+B"/>
@@ -283,92 +285,92 @@
                                 </Binding.ConverterParameter>
                             </Binding>
                         </MenuItem.IsEnabled>
-                        <MenuItem Header="1" IsCheckable="True">
+                        <MenuItem Header="1" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="1">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>1</sys:Double>
+                                        <sys:Int32>1</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="2" IsCheckable="True">
+                        <MenuItem Header="2" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="2">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>2</sys:Double>
+                                        <sys:Int32>2</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="3" IsCheckable="True">
+                        <MenuItem Header="3" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="3">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>3</sys:Double>
+                                        <sys:Int32>3</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="4" IsCheckable="True">
+                        <MenuItem Header="4" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="4">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>4</sys:Double>
+                                        <sys:Int32>4</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="5" IsCheckable="True">
+                        <MenuItem Header="5" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="5">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>5</sys:Double>
+                                        <sys:Int32>5</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="6" IsCheckable="True">
+                        <MenuItem Header="6" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="6">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>6</sys:Double>
+                                        <sys:Int32>6</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="7" IsCheckable="True">
+                        <MenuItem Header="7" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="7">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>7</sys:Double>
+                                        <sys:Int32>7</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="8" IsCheckable="True">
+                        <MenuItem Header="8" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="8">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>8</sys:Double>
+                                        <sys:Int32>8</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="9" IsCheckable="True">
+                        <MenuItem Header="9" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="9">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>9</sys:Double>
+                                        <sys:Int32>9</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
                         </MenuItem>
-                        <MenuItem Header="10" IsCheckable="True">
+                        <MenuItem Header="10" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="10">
                             <MenuItem.IsChecked>
-                                <Binding Path="FixedColumns" Mode="TwoWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
                                     <Binding.ConverterParameter>
-                                        <sys:Double>10</sys:Double>
+                                        <sys:Int32>10</sys:Int32>
                                     </Binding.ConverterParameter>
                                 </Binding>
                             </MenuItem.IsChecked>
@@ -390,6 +392,9 @@
                         <Style x:Key="SizeableRectangleStyle" TargetType="Rectangle">
                             <Setter Property="Stroke" Value="Transparent"/>
                             <Setter Property="StrokeThickness" Value="0"/>
+                        </Style>
+                        <Style x:Key="SquareRectangleStyle" TargetType="Rectangle" BasedOn="{StaticResource SizeableRectangleStyle}">
+                            <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Mode=OneWay}"/>
                         </Style>
                         <Style TargetType="{x:Type Rectangle}" BasedOn="{StaticResource SizeableRectangleStyle}"/>
                     </UniformGrid.Resources>
