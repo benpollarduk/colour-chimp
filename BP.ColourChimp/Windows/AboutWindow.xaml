@@ -5,24 +5,24 @@
         ShowInTaskbar="False" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <Style TargetType="{x:Type Label}">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
     </Window.Resources>
     <Grid Background="Black">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
-        <Image Source="/Resources/Icons/Icon.png" Margin="6" Grid.RowSpan="6" />
-        <Label Content="Colour Chimp" FontSize="18" Grid.Row="0" Grid.Column="1" />
-        <Label Name="VersionLabel" Content="Version ?.?.?.?" FontSize="12" Grid.Row="1" Grid.Column="1" />
-        <Label Content="Developed By Ben Pollard 2010 - 2023" Grid.Row="2" Grid.Column="1" />
+        <Image Source="/Resources/Icons/Icon.png" Margin="6" Grid.RowSpan="6"/>
+        <Label Content="Colour Chimp" FontSize="18" Grid.Row="0" Grid.Column="1"/>
+        <Label Name="VersionLabel" Content="Version ?.?.?.?" FontSize="12" Grid.Row="1" Grid.Column="1"/>
+        <Label Content="Developed By Ben Pollard 2010 - 2023" Grid.Row="2" Grid.Column="1"/>
     </Grid>
 </Window>

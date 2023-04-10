@@ -61,6 +61,27 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\BooleanInverterConverter.cs" />
+    <Compile Include="Converters\BooleanToVisibilityCollapsedConverter.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\DoubleEqualsValueToBooleanConverter.cs" />
+    <Compile Include="Converters\DoubleNotEqualsValueToBooleanConverter.cs" />
+    <Compile Include="Converters\DoubleRoundingConverter.cs" />
+    <Compile Include="Converters\MultipleBooleanAndToSingleBooleanConverter.cs" />
+    <Compile Include="Converters\MultipleBooleanAndToVisibilityCollapsedConverter.cs" />
+    <Compile Include="Converters\MultipleBooleanAndToVisibilityConverter.cs" />
+    <Compile Include="Converters\MultipleBooleanOrToSingleBooleanConverter.cs" />
+    <Compile Include="Converters\MultipleBooleanOrToVisibilityCollapsedConverter.cs" />
+    <Compile Include="Converters\ObjectEqualsObjectToBooleanConverter.cs" />
+    <Compile Include="Converters\ObjectEqualsObjectToVisibilityCollapsedConverter.cs" />
+    <Compile Include="Converters\ObjectEqualsObjectToVisibilityConverter.cs" />
+    <Compile Include="Converters\ObjectNotEqualsObjectToBooleanConverter.cs" />
+    <Compile Include="Converters\ObjectNotEqualsObjectToVisibilityCollapsedConverter.cs" />
+    <Compile Include="Converters\ObjectNotNullToBooleanConverter.cs" />
+    <Compile Include="Converters\ObjectNotNullToVisibilityCollapsedConverter.cs" />
+    <Compile Include="Converters\ObjectNotNullToVisibilityConverter.cs" />
+    <Compile Include="Converters\ObjectNullToBooleanConverter.cs" />
+    <Compile Include="Converters\ObjectNullToVisibilityConverter.cs" />
     <Compile Include="Validation\DegreeDoubleValidationRule.cs" />
     <Compile Include="Validation\HexByteValidationRule.cs" />
     <Compile Include="Validation\NormalisedDoubleValidationRule.cs" />
@@ -98,6 +119,8 @@
     <Compile Include="Classes\ChannelDominanceModes.cs" />
     <Compile Include="Classes\UpdatePixelCallback.cs" />
     <Compile Include="Validation\ByteValidationRule.cs" />
+    <Compile Include="Converters\ByteToHexStringConverter.cs" />
+    <Compile Include="Converters\ByteToDoublePercentConverter.cs" />
     <Compile Include="Windows\ColorInfoWindow.xaml.cs">
       <DependentUpon>ColorInfoWindow.xaml</DependentUpon>
     </Compile>
@@ -106,13 +129,13 @@
     <Compile Include="Classes\CMYKColor.cs" />
     <Compile Include="Classes\HSVColor.cs" />
     <Compile Include="Classes\DesktopHelper.cs" />
-    <Compile Include="Converters\ModeToBooleanConverter.cs" />
     <Compile Include="Converters\RGBToCMYKConverter.cs" />
     <Compile Include="Converters\RGBToHSVConverter.cs" />
     <Compile Include="Converters\DoublePercentageToByteConverter.cs" />
     <Compile Include="Converters\DoublePercentageToDoubleDegreesConverter.cs" />
     <Compile Include="Converters\DoublePercentageToNormalisedDoubleConverter.cs" />
     <Compile Include="Validation\DoublePercentageValidationRule.cs" />
+    <Compile Include="Converters\EGridModeToVerticalAlignmentConverter.cs" />
     <Compile Include="Windows\FullScreenPreviewWindow.xaml.cs">
       <DependentUpon>FullScreenPreviewWindow.xaml</DependentUpon>
     </Compile>

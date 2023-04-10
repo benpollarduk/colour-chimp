@@ -11,7 +11,7 @@ namespace BP.ColourChimp.Validation
         /// <summary>When overridden in a derived class, performs validation checks on a value.</summary>
         /// <param name="value">The value from the binding target to check.</param>
         /// <param name="cultureInfo">The culture to use in this rule.</param>
-        /// <returns>A <see cref="T:System.Windows.Controls.ValidationResult" /> object.</returns>
+        /// <returns>A <see cref="T:System.Windows.Controls.ValidationResult"/> object.</returns>
         public override ValidationResult Validate(object value, CultureInfo cultureInfo)
         {
             if (!double.TryParse(value?.ToString() ?? string.Empty, out var d))

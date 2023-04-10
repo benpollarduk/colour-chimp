@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Globalization;
 using System.Windows.Data;
-using System.Windows.Media;
-using BP.ColourChimp.Classes;
-using BP.ColourChimp.Extensions;
 
 namespace BP.ColourChimp.Converters
 {
-    [ValueConversion(typeof(Color), typeof(CMYKColor))]
-    public class RGBToCMYKConverter : IValueConverter
+    [ValueConversion(typeof(byte), typeof(string))]
+    public class ByteToHexStringConverter : IValueConverter
     {
-        #region Implementation of IValueConverter
+        #region IValueConverter Members
 
         /// <summary>Converts a value. </summary>
         /// <param name="value">The value produced by the binding source.</param>
@@ -18,12 +15,9 @@ namespace BP.ColourChimp.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>A converted value. If the method returns <see langword="null"/>, the valid null value is used.</returns>
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is System.Windows.Media.Color color)
-                return color.ToCMYK();
-
-            return new CMYKColor(0, 0, 0, 0);
+            return byte.TryParse(value?.ToString() ?? string.Empty, out var valueAsByte) ? Convert.ToString(valueAsByte, 16).ToUpper() : "00";
         }
 
         /// <summary>Converts a value. </summary>
@@ -32,12 +26,9 @@ namespace BP.ColourChimp.Converters
         /// <param name="parameter">The converter parameter to use.</param>
         /// <param name="culture">The culture to use in the converter.</param>
         /// <returns>A converted value. If the method returns <see langword="null"/>, the valid null value is used.</returns>
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is CMYKColor color)
-                return color.ToColor();
-
-            return Color.FromArgb(0, 0, 0, 0);
+            throw new NotImplementedException();
         }
 
         #endregion

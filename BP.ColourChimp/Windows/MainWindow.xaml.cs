@@ -10,7 +10,6 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -427,10 +426,10 @@ namespace BP.ColourChimp.Windows
 
         private void Clear()
         {
-            if (coloursGrid.Children.Count == 0)
+            if (ColoursGrid.Children.Count == 0)
                 return;
 
-            var rectangles = new List<Rectangle>(coloursGrid.Children.Cast<Rectangle>());
+            var rectangles = new List<Rectangle>(ColoursGrid.Children.Cast<Rectangle>());
 
             foreach (var r in rectangles)
                 RemoveRectangle(r);
@@ -440,10 +439,10 @@ namespace BP.ColourChimp.Windows
 
         private void ClearLast()
         {
-            if (coloursGrid.Children.Count == 0)
+            if (ColoursGrid.Children.Count == 0)
                 return;
 
-            RemoveRectangle(coloursGrid.Children[coloursGrid.Children.Count - 1] as Rectangle);
+            RemoveRectangle(ColoursGrid.Children[ColoursGrid.Children.Count - 1] as Rectangle);
         }
 
         private void ShowExportDialog()
@@ -464,9 +463,9 @@ namespace BP.ColourChimp.Windows
                     defaultPath = saveFileDialog.FileName.Substring(0, saveFileDialog.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
                     ExportPatchwork(saveFileDialog.FileName);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Status = $"Exception caught saving file: {e.Message}";
+                    Status = $"Exception caught saving file: {ex.Message}";
                 }
             };
 
@@ -490,17 +489,17 @@ namespace BP.ColourChimp.Windows
                     defaultPath = openFileDialog.FileName.Substring(0, openFileDialog.FileName.LastIndexOf("\\", StringComparison.Ordinal) - 1);
                     ImportImage(openFileDialog.FileName);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    Status = $"Exception caught importing file: {e.Message}";
+                    Status = $"Exception caught importing file: {ex.Message}";
                 }
             };
             openFileDialog.ShowDialog();
         }
 
-        private bool ExportPatchwork(string path)
+        private void ExportPatchwork(string path)
         {
-            var background = coloursGrid.Background;
+            var background = ColoursGrid.Background;
 
             try
             {
@@ -508,7 +507,7 @@ namespace BP.ColourChimp.Windows
                 var count = (int)ColorCount;
                 var sqr = (int)Math.Ceiling(Math.Sqrt(count));
                 var image = new Bitmap(sqr, sqr);
-                var rectangles = coloursGrid.Children.OfType<Rectangle>().ToArray();
+                var rectangles = ColoursGrid.Children.OfType<Rectangle>().ToArray();
                 var rectangleIndex = 0;
 
                 for (var row = 0; row < sqr; row++)
@@ -552,17 +551,15 @@ namespace BP.ColourChimp.Windows
 
                 image.Save(path, format);
                 Status = $"Exported to: {path}";
-                return true;
             }
             catch (Exception e)
             {
                 MessageBox.Show($"An error occurred while saving the file: {e.Message}", "Export Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Status = "Export failed";
-                return false;
             }
             finally
             {
-                coloursGrid.Background = background;
+                ColoursGrid.Background = background;
             }
         }
 
@@ -669,16 +666,6 @@ namespace BP.ColourChimp.Windows
             // draw the screen shot into the bitmap
             using (var g = Graphics.FromImage(bmp))
                 g.CopyFromScreen(screenLeft, screenTop, 0, 0, bmp.Size);
-
-            return bmp;
-        }
-
-        private Bitmap GetVirtualScreenBitmap(Int32Rect region)
-        {
-            var bmp = new Bitmap(region.Width, region.Height);
-
-            using (var g = Graphics.FromImage(bmp))
-                g.CopyFromScreen(region.X, region.Y, 0, 0, bmp.Size);
 
             return bmp;
         }
@@ -803,7 +790,6 @@ namespace BP.ColourChimp.Windows
 
                 roiGatherWorker.DoWork += (sender, args) =>
                 {
-                    var capture = args.Argument as Bitmap;
                     var pixels = new List<string>();
                     double percentageComplete;
 
@@ -892,13 +878,13 @@ namespace BP.ColourChimp.Windows
                     case GridMode.FitToArea:
                         break;
                     case GridMode.MaintainSize:
-                        r.Style = coloursGrid.FindResource("squareRectangleStyle") as Style;
+                        r.Style = ColoursGrid.FindResource("squareRectangleStyle") as Style;
                         break;
                     default:
                         throw new NotImplementedException();
                 }
 
-                coloursGrid.Children.Add(r);
+                ColoursGrid.Children.Add(r);
                 ColorCount++;
                 HasChildrenColors = true;
             }
@@ -912,9 +898,9 @@ namespace BP.ColourChimp.Windows
         {
             try
             {
-                coloursGrid.Children.Remove(rectangle);
+                ColoursGrid.Children.Remove(rectangle);
                 ColorCount--;
-                HasChildrenColors = coloursGrid.Children.Count > 0;
+                HasChildrenColors = ColoursGrid.Children.Count > 0;
             }
             catch (Exception)
             {
@@ -926,7 +912,7 @@ namespace BP.ColourChimp.Windows
         {
             Mode = Mode.Sort;
             AllBackgroundOperationsIdle = false;
-            var rectangleCollection = coloursGrid.Children;
+            var rectangleCollection = ColoursGrid.Children;
 
             colorSorterWorker?.CancelAsync();
             colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
@@ -956,8 +942,8 @@ namespace BP.ColourChimp.Windows
 
                         Dispatcher.Invoke(() =>
                         {
-                            coloursGrid.Children.Remove(sortList[index]);
-                            coloursGrid.Children.Insert(index, sortList[index]);
+                            ColoursGrid.Children.Remove(sortList[index]);
+                            ColoursGrid.Children.Insert(index, sortList[index]);
                         });
                     }
                 }
@@ -982,7 +968,7 @@ namespace BP.ColourChimp.Windows
 
         private void PopulateWindowsSubMenuWithOpenWindows()
         {
-            gatherFromWindowMenuItem.Items.Clear();
+            GatherFromWindowMenuItem.Items.Clear();
 
             var procs = Process.GetProcesses();
 
@@ -992,18 +978,18 @@ namespace BP.ColourChimp.Windows
                     continue;
 
                 var windowNameItem = new MenuItem { Header = proc.ProcessName };
-                windowNameItem.Click += windowNameItem_Click;
-                gatherFromWindowMenuItem.Items.Add(windowNameItem);
+                windowNameItem.Click += WindowNameItem_Click;
+                GatherFromWindowMenuItem.Items.Add(windowNameItem);
             }
 
-            gatherFromWindowMenuItem.IsEnabled = gatherFromWindowMenuItem.Items.Count > 0;
+            GatherFromWindowMenuItem.IsEnabled = GatherFromWindowMenuItem.Items.Count > 0;
         }
 
         private void RemoveDuplicateColors()
         {
             Mode = Mode.Filter;
             AllBackgroundOperationsIdle = false;
-            var rectangleCollection = coloursGrid.Children;
+            var rectangleCollection = ColoursGrid.Children;
 
             colorSorterWorker?.CancelAsync();
             colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
@@ -1105,7 +1091,7 @@ namespace BP.ColourChimp.Windows
         {
             Mode = Mode.Filter;
             AllBackgroundOperationsIdle = false;
-            var rectangleCollection = coloursGrid.Children;
+            var rectangleCollection = ColoursGrid.Children;
 
             colorSorterWorker?.CancelAsync();
             colorSorterWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
@@ -1335,7 +1321,7 @@ namespace BP.ColourChimp.Windows
                         case PopulationModes.PresentationFramework:
                             
                             foreach (var color in typeof(Colors).GetProperties())
-                                Dispatcher.Invoke(() => AddColor((Color)ColorConverter.ConvertFromString(color.Name));
+                                Dispatcher.Invoke(() => AddColor((Color)ColorConverter.ConvertFromString(color.Name)));
 
                             break;
 
@@ -1392,7 +1378,7 @@ namespace BP.ColourChimp.Windows
             if (window == null)
                 return;
 
-            window.swatchBorder.Background = new SolidColorBrush(Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue));
+            window.SwatchBorder.Background = new SolidColorBrush(Color.FromArgb(window.Alpha, window.Red, window.Green, window.Blue));
 
             if (window.ColorSpace != ColorSpace.ARGB)
                 return;
@@ -1469,11 +1455,11 @@ namespace BP.ColourChimp.Windows
                 case Mode.Add:
                     window.Cursor = Cursors.Arrow;
                     window.Status = "Ready";
-                    window.coloursGrid.Cursor = Cursors.Hand;
+                    window.ColoursGrid.Cursor = Cursors.Hand;
                     break;
                 case Mode.Delete:
                     window.Status = "Click a color to remove it, or press escape to cancel...";
-                    window.coloursGrid.Cursor = Cursors.Arrow;
+                    window.ColoursGrid.Cursor = Cursors.Arrow;
                     break;
                 case Mode.Filter:
                     window.Cursor = Cursors.Wait;
@@ -1515,18 +1501,18 @@ namespace BP.ColourChimp.Windows
             switch ((GridMode)args.NewValue)
             {
                 case GridMode.FitToArea:
-                    window.coloursGrid.Columns = 0;
-                    window.coloursGrid.FirstColumn = 0;
+                    window.ColoursGrid.Columns = 0;
+                    window.ColoursGrid.FirstColumn = 0;
 
-                    foreach (Rectangle r in window.coloursGrid.Children)
-                        r.Style = window.coloursGrid.FindResource("SizeableRectangleStyle") as Style;
+                    foreach (Rectangle r in window.ColoursGrid.Children)
+                        r.Style = window.ColoursGrid.FindResource("SizeableRectangleStyle") as Style;
 
                     break;
                 case GridMode.MaintainSize:
-                    window.coloursGrid.Columns = (int)window.FixedColumns;
+                    window.ColoursGrid.Columns = (int)window.FixedColumns;
 
-                    foreach (Rectangle r in window.coloursGrid.Children)
-                        r.Style = window.coloursGrid.FindResource("squareRectangleStyle") as Style;
+                    foreach (Rectangle r in window.ColoursGrid.Children)
+                        r.Style = window.ColoursGrid.FindResource("squareRectangleStyle") as Style;
 
                     break;
                 default:
@@ -1542,7 +1528,7 @@ namespace BP.ColourChimp.Windows
                 return;
 
             if (window.GridMode == GridMode.MaintainSize)
-                window.coloursGrid.Columns = (int)args.NewValue;
+                window.ColoursGrid.Columns = (int)args.NewValue;
         }
 
         #endregion
@@ -1763,7 +1749,7 @@ namespace BP.ColourChimp.Windows
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            Keyboard.Focus(statusBar);
+            Keyboard.Focus(StatusBar);
         }
 
         private void IncrementAlphaButton_Click(object sender, RoutedEventArgs e)
@@ -1881,67 +1867,43 @@ namespace BP.ColourChimp.Windows
             ShowColorInfoWindow(Color.FromArgb(Alpha, Red, Green, Blue));
         }
 
-#region MenuItems
-
-        private void windowNameItem_Click(object sender, RoutedEventArgs e)
+        private void WindowNameItem_Click(object sender, RoutedEventArgs e)
         {
-            // re-find process to get handle
-
-            // get item
             var item = sender as MenuItem;
 
-            // get all processes
-            var procs = Process.GetProcesses();
+            if (item == null)
+                return;
 
-            // itterate all processes
-            foreach (var proc in procs)
-                // check names
-                if (proc.ProcessName == item.Header.ToString())
-                {
-                    // get handle
-                    var handle = proc.MainWindowHandle;
+            foreach (var proc in Process.GetProcesses())
+            {
+                if (proc.ProcessName != item.Header.ToString()) 
+                    continue;
 
-                    // bring to front
-                    DesktopHelper.SetForegroundWindow(handle.ToInt32());
+                var handle = proc.MainWindowHandle;
+                DesktopHelper.SetForegroundWindow(handle.ToInt32());
 
-                    // create rectangle
-                    var rectangle = new DesktopHelper.RECT();
+                if (DesktopHelper.GetWindowRect(handle, out var r))
+                    GatherAllPixelsInROI(r.Top, r.Left, r.Bottom, r.Right);
 
-                    // get window rectangle
-                    if (DesktopHelper.GetWindowRect(handle, out rectangle))
-                        // capture roi
-                        GatherAllPixelsInROI(rectangle.Top, rectangle.Left, rectangle.Bottom, rectangle.Right);
-
-                    // get helper for interop
-                    var helper = new WindowInteropHelper(this);
-
-                    // bring this back to foreground
-                    DesktopHelper.SetForegroundWindow(helper.Handle.ToInt32());
-
-                    // break out
-                    break;
-                }
+                var helper = new WindowInteropHelper(this);
+                DesktopHelper.SetForegroundWindow(helper.Handle.ToInt32());
+                break;
+            }
         }
 
-        private void gatherMenuItem_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void GatherMenuItem_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            // if the sub menu is not already opening (could be selecting a window..)
-            if (!gatherFromWindowMenuItem.IsSubmenuOpen)
-                // popuplate window
-                populateWindowsSubMenuWithOpenWindows();
+            if (!GatherFromWindowMenuItem.IsSubmenuOpen)
+                PopulateWindowsSubMenuWithOpenWindows();
         }
 
-        private void gatherMenuItem_MouseEnter(object sender, MouseEventArgs e)
+        private void GatherMenuItem_MouseEnter(object sender, MouseEventArgs e)
         {
-            // if the sub menu is not already opening (could be selecting a window..)
-            if (!gatherFromWindowMenuItem.IsSubmenuOpen)
-                // popuplate window
-                populateWindowsSubMenuWithOpenWindows();
+            if (!GatherFromWindowMenuItem.IsSubmenuOpen)
+                PopulateWindowsSubMenuWithOpenWindows();
         }
 
-#endregion
-
-#endregion
+        #endregion
 
         #region CommandCallbacks
 
@@ -2096,7 +2058,7 @@ namespace BP.ColourChimp.Windows
             GatherAllPixelsInROI(0, 0, SystemInformation.VirtualScreen.Height, SystemInformation.VirtualScreen.Width);
         }
 
-        private void PopulartePresentationFrameworkCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        private void PopulatePresentationFrameworkCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             Populate(PopulationModes.PresentationFramework);
         }
@@ -2107,551 +2069,5 @@ namespace BP.ColourChimp.Windows
         }
 
         #endregion
-    }
-
-#region Converters
-
-    /// <summary>
-    /// Converts a Double to a Visibility. The Double provided as the value is compared to the Double provided as the parameter. If the value >= the parameter Visibility.Visible is returned, else Visibility.Hidden is returned
-    /// </summary>
-    [ValueConversion(typeof(double), typeof(Visibility))]
-    public class DoubleHeightGreaterThatParameterToVisibilityConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value as a double
-            double valueAsDouble;
-
-            // hold parameter as a double
-            double parameterAsDouble;
-
-            // parse values
-            if (value != null &&
-                double.TryParse(value.ToString(), out valueAsDouble) &&
-                parameter != null &&
-                double.TryParse(parameter.ToString(), out parameterAsDouble))
-                // parse
-                return valueAsDouble >= parameterAsDouble ? Visibility.Visible : Visibility.Hidden;
-            return Visibility.Visible;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen a background colour and a readble foreground colour
-    /// </summary>
-    [ValueConversion(typeof(Color), typeof(Color))]
-    public class BackgroundColorToReadableForegroundColorConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // if some value
-            if (value != null)
-            {
-                // get colour
-                var background = (Color)ColorConverter.ConvertFromString(value.ToString());
-
-                // if too white
-                if (background.A < 125 ||
-                    (background.R + background.G + background.B) / 3 > 122.5)
-                    // return black
-                    return Colors.Black;
-                return Colors.White;
-            }
-
-            // just use black
-            return Colors.Black;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts a Byte to a string representation in hex
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(string))]
-    public class ByteToHexStringConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value as byte
-            byte valueAsByte;
-
-            // if a value that parses
-            if (value != null &&
-                byte.TryParse(value.ToString(), out valueAsByte))
-                // convert to base 16
-                return Convert.ToString(valueAsByte, 16).ToUpper();
-            return "00";
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // if a value
-            if (value != null)
-                try
-                {
-                    // convert
-                    var b = Convert.ToByte(value.ToString().ToUpper(), 16);
-
-                    // return
-                    return b;
-                }
-                catch (InvalidCastException)
-                {
-                    // return 0 as byte
-                    return (byte)0;
-                }
-                catch (InvalidOperationException)
-                {
-                    // return 0 as byte
-                    return (byte)0;
-                }
-
-            return (byte)0;
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts a Byte to a percentage of it's maximum value (i.e a percentage of 256)
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(double))]
-    public class ByteToDoublePercentConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value as byte
-            byte valueAsByte;
-
-            // if a value that parses
-            if (value != null &&
-                byte.TryParse(value.ToString(), out valueAsByte))
-                // convert to percent
-                return Math.Round(100d / 255d * valueAsByte, 1);
-            return 0d;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold value as double
-            double valueAsDouble;
-
-            // if a value that parses
-            if (value != null &&
-                double.TryParse(value.ToString(), out valueAsDouble))
-                // convert to percent
-                return 255d / 100d * valueAsDouble;
-            return (byte)0;
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen a Byte and a Boolean, returning true if the byte is different to 255
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(bool))]
-    public class NotMaxByteToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold byte
-            byte b;
-
-            // if a byte value
-            if (value != null &&
-                byte.TryParse(value.ToString(), out b))
-                // return result
-                return b != 255;
-            return false;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen a Byte and a Boolean, returning true if the byte is different to 0
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(bool))]
-    public class NotMinByteToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold byte
-            byte b;
-
-            // if a byte value
-            if (value != null &&
-                byte.TryParse(value.ToString(), out b))
-                // return result
-                return b != 0;
-            return false;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen a Double and a Boolean, returning true if the double is different to 100
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(bool))]
-    public class NotMaxDoublePercentageToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold double
-            double d;
-
-            // if a byte value
-            if (value != null &&
-                double.TryParse(value.ToString(), out d))
-                // return result
-                return d != 100;
-            return false;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen a Double and a Boolean, returning true if the double is different to 0
-    /// </summary>
-    [ValueConversion(typeof(byte), typeof(bool))]
-    public class NotMinDoublePercentageToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold double
-            double d;
-
-            // if a double value
-            if (value != null &&
-                double.TryParse(value.ToString(), out d))
-                // return result
-                return d != 0;
-            return false;
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts between multiple boolean values to a boolean value using and (&&) logic
-    /// </summary>
-    [ValueConversion(typeof(bool), typeof(bool))]
-    public class BooleanAndMultiConverter : IMultiValueConverter
-    {
-#region IMultiValueConverter Members
-
-        object IMultiValueConverter.Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
-            // hold result
-            var result = true;
-
-            // itterate all values
-            foreach (var o in values)
-            {
-                // if a boolean
-                if (o is bool)
-                    // add result
-                    result = (bool)o;
-                else
-                    // as default make false
-                    result = false;
-
-                // if a false in there somewhere
-                if (result == false)
-                    // break - why keep checking
-                    return false;
-            }
-
-            // return
-            return result;
-        }
-
-        object[] IMultiValueConverter.ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen an EGridMode and a Boolean value. An EGridMode must be provieded as the value and parameter and, if these values match, true is retruned, else false
-    /// </summary>
-    [ValueConversion(typeof(GridMode), typeof(bool))]
-    public class EGridModeToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // if values present
-                if (value != null && parameter != null)
-                {
-                    // get value
-                    var valueMode = (GridMode)Enum.Parse(typeof(GridMode), value.ToString());
-
-                    // get parameter
-                    var parameterMode = (GridMode)Enum.Parse(typeof(GridMode), parameter.ToString());
-
-                    // return if the same
-                    return valueMode == parameterMode;
-                }
-
-                // return fail
-                return false;
-            }
-            catch (Exception)
-            {
-                // return fail
-                return false;
-            }
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // hold value
-                bool valueAsBoolean;
-
-                // if a value and a parameter
-                if (bool.TryParse(value.ToString(), out valueAsBoolean) &&
-                    parameter != null)
-                {
-                    // get parameter mode
-                    var parameterMode = (GridMode)Enum.Parse(typeof(GridMode), parameter.ToString());
-
-                    // if true
-                    if (valueAsBoolean)
-                        // return mode
-                        return parameterMode;
-                    return GridMode.MaintainSize;
-                }
-
-                // just default
-                return GridMode.MaintainSize;
-            }
-            catch (Exception)
-            {
-                // just default
-                return GridMode.MaintainSize;
-            }
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts bewteen an Double and a Boolean value. A Double must be provieded as the value and parameter and, if these values match, true is retruned, else false
-    /// </summary>
-    [ValueConversion(typeof(double), typeof(bool))]
-    public class DoubleToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // hold value as double
-                double valueAsDouble;
-
-                // hold parameter as double
-                double parameterAsDouble;
-
-                // if values present
-                if (double.TryParse(value.ToString(), out valueAsDouble) &&
-                    double.TryParse(parameter.ToString(), out parameterAsDouble))
-                    // return if the same
-                    return valueAsDouble == parameterAsDouble;
-                return false;
-            }
-            catch (Exception)
-            {
-                // return fail
-                return false;
-            }
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // hold value
-                bool valueAsBoolean;
-
-                // hold parameter as double
-                double parameterAsDouble;
-
-                // if a value and a parameter
-                if (bool.TryParse(value.ToString(), out valueAsBoolean) &&
-                    double.TryParse(parameter.ToString(), out parameterAsDouble))
-                {
-                    // if true
-                    if (valueAsBoolean)
-                        // return mode
-                        return parameterAsDouble;
-                    return 3d;
-                }
-
-                // just default
-                return 3d;
-            }
-            catch (Exception)
-            {
-                // just default
-                return 3d;
-            }
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts between an EGridMode and a VerticalAlignment. EGridMode.MaintainSize will return VerticalAlignment.Top, else VerticalAlignment.Stretch will be returned
-    /// </summary>
-    [ValueConversion(typeof(GridMode), typeof(VerticalAlignment))]
-    public class EGridModeToVerticalAlignmentConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // get mode
-                var mode = (GridMode)Enum.Parse(typeof(GridMode), value.ToString());
-
-                // return the correct alignment
-                return mode == GridMode.MaintainSize ? VerticalAlignment.Top : VerticalAlignment.Stretch;
-            }
-            catch (Exception)
-            {
-                // just return stretch
-                return VerticalAlignment.Stretch;
-            }
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-    }
-
-    /// <summary>
-    /// Converts between an EColorSpace and a Boolean. A comparative EColorSpace should be provided as the parameter, which is used to comare to the EColorSpace value to return the Boolean result
-    /// </summary>
-    [ValueConversion(typeof(ColorSpace), typeof(bool))]
-    public class EColorSpaceToBooleanConverter : IValueConverter
-    {
-#region IValueConverter Members
-
-        object IValueConverter.Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // get value
-                var valueColorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), value.ToString());
-
-                // get parameter
-                var parameterColorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), parameter.ToString());
-
-                // compare and return
-                return valueColorSpace == parameterColorSpace;
-            }
-            catch (NullReferenceException)
-            {
-                // return fail
-                return false;
-            }
-            catch (InvalidCastException)
-            {
-                // return fail
-                return false;
-            }
-        }
-
-        object IValueConverter.ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            try
-            {
-                // get value
-                var valueBoolean = bool.Parse(value.ToString());
-
-                // get parameter
-                var parameterColorSpace = (ColorSpace)Enum.Parse(typeof(ColorSpace), parameter.ToString());
-
-                // compare and return parameter or standard
-                return valueBoolean ? parameterColorSpace : ColorSpace.ARGB;
-            }
-            catch (NullReferenceException)
-            {
-                // return standard
-                return ColorSpace.ARGB;
-            }
-            catch (InvalidCastException)
-            {
-                // return standard
-                return ColorSpace.ARGB;
-            }
-        }
-
-#endregion
     }
 }

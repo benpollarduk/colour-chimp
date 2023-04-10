@@ -5,104 +5,104 @@
         WindowStartupLocation="CenterOwner" WindowStyle="ToolWindow">
     <Window.Resources>
         <Style TargetType="{x:Type Label}">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
-        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource buttonStyle}" />
+        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource buttonStyle}"/>
         <Style x:Key="CopyButtonStyle" TargetType="Button" BasedOn="{StaticResource buttonStyle}">
-            <Setter Property="Width" Value="Auto" />
-            <Setter Property="Height" Value="Auto" />
-            <Setter Property="Padding" Value="0" />
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="Height" Value="Auto"/>
+            <Setter Property="Padding" Value="0"/>
             <Style.Resources>
                 <Style TargetType="{x:Type Image}">
-                    <Setter Property="Width" Value="18" />
-                    <Setter Property="Height" Value="18" />
-                    <Setter Property="Stretch" Value="Uniform" />
-                    <Setter Property="Margin" Value="-2" />
-                    <Setter Property="IsHitTestVisible" Value="False" />
+                    <Setter Property="Width" Value="18"/>
+                    <Setter Property="Height" Value="18"/>
+                    <Setter Property="Stretch" Value="Uniform"/>
+                    <Setter Property="Margin" Value="-2"/>
+                    <Setter Property="IsHitTestVisible" Value="False"/>
                 </Style>
             </Style.Resources>
         </Style>
         <Style TargetType="{x:Type Expander}">
-            <Setter Property="Foreground" Value="White" />
-            <Setter Property="Margin" Value="4" />
-            <Setter Property="BorderBrush" Value="White" />
-            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="BorderBrush" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Style.Triggers>
                 <Trigger Property="IsExpanded" Value="True">
-                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderThickness" Value="1"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
     <Grid MinWidth="370">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Border Name="ColourBorder" BorderBrush="Black" Background="White" BorderThickness="1" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="100" Margin="2">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 <Border BorderThickness="0,0,2,0" BorderBrush="Black" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                     <Border.Background>
-                        <SolidColorBrush Color="{Binding Path=SelectedColor, Mode=OneWay}" />
+                        <SolidColorBrush Color="{Binding Path=SelectedColor, Mode=OneWay}"/>
                     </Border.Background>
                 </Border>
                 <Border BorderThickness="0,0,2,0" BorderBrush="Black" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="1">
                     <Grid>
-                        <Label Content="RGB" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="10" Margin="-2" />
+                        <Label Content="RGB" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="10" Margin="-2"/>
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="30" />
-                                <RowDefinition Height="30" />
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="30"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="30" />
-                                <ColumnDefinition Width="30" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="30"/>
                             </Grid.ColumnDefinitions>
-                            <Path Name="RShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Red" Stroke="Black" StrokeThickness="1" Grid.Row="0" Grid.Column="1" />
-                            <Path Name="GShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Green" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" />
+                            <Path Name="RShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Red" Stroke="Black" StrokeThickness="1" Grid.Row="0" Grid.Column="1"/>
+                            <Path Name="GShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Green" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
                             <Path Name="RGBShape" Data="M 0 0 L 15 30 30 0 Z" Grid.Row="1" Grid.Column="1">
                                 <Path.Fill>
-                                    <SolidColorBrush Color="{Binding Path=SelectedColor, Mode=OneWay}" />
+                                    <SolidColorBrush Color="{Binding Path=SelectedColor, Mode=OneWay}"/>
                                 </Path.Fill>
                             </Path>
-                            <Path Name="BShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Blue" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center" />
+                            <Path Name="BShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Blue" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
                         </Grid>
                     </Grid>
                 </Border>
                 <Border BorderThickness="0,0,1,0" BorderBrush="Black" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Grid.Column="2">
                     <Grid>
-                        <Label Content="CMY" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="10" Margin="-2" />
+                        <Label Content="CMY" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="10" Margin="-2"/>
                         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="30" />
-                                <RowDefinition Height="30" />
+                                <RowDefinition Height="30"/>
+                                <RowDefinition Height="30"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="30" />
-                                <ColumnDefinition Width="30" />
-                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="30"/>
                             </Grid.ColumnDefinitions>
-                            <Path Name="CShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Cyan" Stroke="Black" StrokeThickness="1" Grid.Row="0" Grid.Column="1" />
-                            <Path Name="MShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Magenta" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center" />
+                            <Path Name="CShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Cyan" Stroke="Black" StrokeThickness="1" Grid.Row="0" Grid.Column="1"/>
+                            <Path Name="MShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Magenta" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
                             <Path Name="CMYShape" Data="M 0 0 L 15 30 30 0 Z" Grid.Row="1" Grid.Column="1">
                                 <Path.Fill>
-                                    <SolidColorBrush Color="{Binding Path=SelectedColor, Mode=OneWay}" />
+                                    <SolidColorBrush Color="{Binding Path=SelectedColor, Mode=OneWay}"/>
                                 </Path.Fill>
                             </Path>
-                            <Path Name="YShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Yellow" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center" />
+                            <Path Name="YShape" Data="M 15 0 L 0 30 30 30 Z" Fill="Yellow" Stroke="Black" StrokeThickness="1" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Center"/>
                         </Grid>
                     </Grid>
                 </Border>
@@ -111,43 +111,43 @@
         <Expander Name="RGBExpander" Header="RGB (Red, Green, Blue) Colour Info" Grid.Row="1">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label Content="RGB Hex:" FontWeight="Bold" Grid.Row="1" Grid.Column="0" />
-                <Label Name="RGBHexLabel" Grid.Row="1" Grid.Column="1" />
+                <Label Content="RGB Hex:" FontWeight="Bold" Grid.Row="1" Grid.Column="0"/>
+                <Label Name="RGBHexLabel" Grid.Row="1" Grid.Column="1"/>
                 <Button Name="CopyRGBHexButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="1" Grid.Column="2" Click="CopyRGBHexButton_Click">
                     <Button.Content>
                         <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="RGB:" FontWeight="Bold" Grid.Row="2" Grid.Column="0" />
-                <Label Name="RGBLabel" Grid.Row="2" Grid.Column="1" />
+                <Label Content="RGB:" FontWeight="Bold" Grid.Row="2" Grid.Column="0"/>
+                <Label Name="RGBLabel" Grid.Row="2" Grid.Column="1"/>
                 <Button Name="CopyRGBButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="2" Grid.Column="2" Click="CopyRGBButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="RGB (normalised):" FontWeight="Bold" Grid.Row="3" Grid.Column="0" />
-                <Label Name="RGBNormalisedLabel" Grid.Row="3" Grid.Column="1" />
+                <Label Content="RGB (normalised):" FontWeight="Bold" Grid.Row="3" Grid.Column="0"/>
+                <Label Name="RGBNormalisedLabel" Grid.Row="3" Grid.Column="1"/>
                 <Button Name="CopyRGBNormalisedButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="3" Grid.Column="2" Click="CopyRGBNormalisedButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="RGB %:" FontWeight="Bold" Grid.Row="4" Grid.Column="0" />
-                <Label Name="RGBPercentLabel" Grid.Row="4" Grid.Column="1" />
+                <Label Content="RGB %:" FontWeight="Bold" Grid.Row="4" Grid.Column="0"/>
+                <Label Name="RGBPercentLabel" Grid.Row="4" Grid.Column="1"/>
                 <Button Name="CopyRGBPercentButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="4" Grid.Column="2" Click="CopyRGBPercentButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
             </Grid>
@@ -155,43 +155,43 @@
         <Expander Name="ARGBExpander" Header="ARGB (Alpha, Red, Green, Blue) Colour Info" Grid.Row="2">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label Content="ARGB Hex:" FontWeight="Bold" Grid.Row="1" Grid.Column="0" />
-                <Label Name="HexLabel" Grid.Row="1" Grid.Column="1" />
+                <Label Content="ARGB Hex:" FontWeight="Bold" Grid.Row="1" Grid.Column="0"/>
+                <Label Name="HexLabel" Grid.Row="1" Grid.Column="1"/>
                 <Button Name="copyHexButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="1" Grid.Column="2" Click="CopyHexButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="ARGB:" FontWeight="Bold" Grid.Row="2" Grid.Column="0" />
-                <Label Name="ARGBLabel" Grid.Row="2" Grid.Column="1" />
+                <Label Content="ARGB:" FontWeight="Bold" Grid.Row="2" Grid.Column="0"/>
+                <Label Name="ARGBLabel" Grid.Row="2" Grid.Column="1"/>
                 <Button Name="CopyArgbButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="2" Grid.Column="2" Click="CopyArgbButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="ARGB (normalised):" FontWeight="Bold" Grid.Row="3" Grid.Column="0" />
-                <Label Name="ARGBNormalisedLabel" Grid.Row="3" Grid.Column="1" />
+                <Label Content="ARGB (normalised):" FontWeight="Bold" Grid.Row="3" Grid.Column="0"/>
+                <Label Name="ARGBNormalisedLabel" Grid.Row="3" Grid.Column="1"/>
                 <Button Name="CopyARGBNormalisedButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="3" Grid.Column="2" Click="CopyARGBNormalisedButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="ARGB %:" FontWeight="Bold" Grid.Row="4" Grid.Column="0" />
-                <Label Name="ARGBPercentLabel" Grid.Row="4" Grid.Column="1" />
+                <Label Content="ARGB %:" FontWeight="Bold" Grid.Row="4" Grid.Column="0"/>
+                <Label Name="ARGBPercentLabel" Grid.Row="4" Grid.Column="1"/>
                 <Button Name="CopyArgbPercentButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="4" Grid.Column="2" Click="CopyArgbPercentButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
             </Grid>
@@ -199,23 +199,23 @@
         <Expander Name="CMYKExpander" Header="CMYK (Cyan, Magenta, Yellow, Key) Colour Info" Grid.Row="3">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label Content="CMYK (normalised):" FontWeight="Bold" Grid.Row="0" Grid.Column="0" />
-                <Label Name="CMYKLabel" Grid.Row="0" Grid.Column="1" />
+                <Label Content="CMYK (normalised):" FontWeight="Bold" Grid.Row="0" Grid.Column="0"/>
+                <Label Name="CMYKLabel" Grid.Row="0" Grid.Column="1"/>
                 <Button Name="CopyCMYKButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="0" Grid.Column="2" Click="CopyCMYKButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="CMYK %:" FontWeight="Bold" Grid.Row="1" Grid.Column="0" />
-                <Label Name="CMYKPercentLabel" Grid.Row="1" Grid.Column="1" />
+                <Label Content="CMYK %:" FontWeight="Bold" Grid.Row="1" Grid.Column="0"/>
+                <Label Name="CMYKPercentLabel" Grid.Row="1" Grid.Column="1"/>
                 <Button Name="CopyCMYKPercentButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="1" Grid.Column="2" Click="CopyCMYKPercentButton_Click">
                     <Button.Content>
                         <Image Source="/Resources/Icons/Copy.png"/>
@@ -226,31 +226,31 @@
         <Expander Name="HSVExpander" Header="HSV (Hue, Saturation, Value) Colour Info" Grid.Row="4">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Label Content="HSV (normalised):" FontWeight="Bold" Grid.Row="0" Grid.Column="0" />
-                <Label Name="HSVLabel" Grid.Row="0" Grid.Column="1" />
+                <Label Content="HSV (normalised):" FontWeight="Bold" Grid.Row="0" Grid.Column="0"/>
+                <Label Name="HSVLabel" Grid.Row="0" Grid.Column="1"/>
                 <Button Name="CopyHSVButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="0" Grid.Column="2" Click="CopyHSVButton_Click">
                     <Button.Content>
                         <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="HSV %:" FontWeight="Bold" Grid.Row="1" Grid.Column="0" />
-                <Label Name="HSVPercentLabel" Grid.Row="1" Grid.Column="1" />
+                <Label Content="HSV %:" FontWeight="Bold" Grid.Row="1" Grid.Column="0"/>
+                <Label Name="HSVPercentLabel" Grid.Row="1" Grid.Column="1"/>
                 <Button Name="CopyHSVPercentButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="1" Grid.Column="2" Click="CopyHSVPercentButton_Click">
                     <Button.Content>
-                        <Image Source="/Resources/Icons/Copy.png" />
+                        <Image Source="/Resources/Icons/Copy.png"/>
                     </Button.Content>
                 </Button>
-                <Label Content="HSV (degrees, normalised, byte):" FontWeight="Bold" Grid.Row="2" Grid.Column="0" />
-                <Label Name="HSVDegreesNormalisedByteLabel" Grid.Row="2" Grid.Column="1" />
+                <Label Content="HSV (degrees, normalised, byte):" FontWeight="Bold" Grid.Row="2" Grid.Column="0"/>
+                <Label Name="HSVDegreesNormalisedByteLabel" Grid.Row="2" Grid.Column="1"/>
                 <Button Name="CopyHSVDegreesNormalisedByteButton" Style="{StaticResource CopyButtonStyle}" Grid.Row="2" Grid.Column="2" Click="CopyHSVDegreesNormalisedByteButton_Click">
                     <Button.Content>
                         <Image Source="/Resources/Icons/Copy.png"/>
@@ -260,17 +260,17 @@
         </Expander>
         <Expander Header="Modifiers" Grid.Row="5" Grid.ColumnSpan="3">
             <StackPanel Orientation="Vertical">
-                <CheckBox Name="NegativeCheckBox" Content="Convert to negative?" Style="{StaticResource CheckBoxBaseStyle}" Margin="4" Checked="NegativeCheckBox_Checked" Unchecked="NegativeCheckBox_Unchecked" />
-                <Button Name="AddModifiedColorToMainButton" Content="Add modified colour to grid" Click="AddModifiedColorToMainButton_Click" />
+                <CheckBox Name="NegativeCheckBox" Content="Convert to negative?" Style="{StaticResource CheckBoxBaseStyle}" Margin="4" Checked="NegativeCheckBox_Checked" Unchecked="NegativeCheckBox_Unchecked"/>
+                <Button Name="AddModifiedColorToMainButton" Content="Add modified colour to grid" Click="AddModifiedColorToMainButton_Click"/>
             </StackPanel>
         </Expander>
         <Grid Grid.Row="6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button Name="PreviewButton" Content="Preview" Grid.Column="0" Click="PreviewButton_Click" />
-            <Button Name="CloseButton" Content="Close" Grid.Column="1" Click="CloseButton_Click" />
+            <Button Name="PreviewButton" Content="Preview" Grid.Column="0" Click="PreviewButton_Click"/>
+            <Button Name="CloseButton" Content="Close" Grid.Column="1" Click="CloseButton_Click"/>
         </Grid>
     </Grid>
 </Window>
