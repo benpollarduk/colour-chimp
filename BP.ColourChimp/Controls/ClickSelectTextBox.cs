@@ -10,7 +10,6 @@ namespace BP.ColourChimp.Controls
     /// </summary>
     public class ClickSelectTextBox : TextBox
     {
-
         #region Constructors
 
         /// <summary>

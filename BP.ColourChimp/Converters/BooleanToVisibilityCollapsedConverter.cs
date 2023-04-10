@@ -37,21 +37,7 @@ namespace BP.ColourChimp.Converters
         /// <param name="value">The value that is produced by the binding target.</param><param name="targetType">The type to convert to.</param><param name="parameter">The converter parameter to use.</param><param name="culture">The culture to use in the converter.</param>
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            try
-            {
-                if (value == null) return false;
-
-                var v = (Visibility)Enum.Parse(typeof(Visibility), value.ToString());
-
-                if ((parameter != null) && (bool.TryParse(parameter.ToString(), out var param)))
-                    return v == Visibility.Visible ? param : !param;
-
-                return v == Visibility.Visible;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+            throw new NotImplementedException();
         }
 
         #endregion

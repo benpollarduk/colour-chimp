@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace BP.ColourChimp.Classes
 {
@@ -10,6 +11,41 @@ namespace BP.ColourChimp.Classes
     public static class DesktopHelper
     {
         #region StaticMethods
+
+        /// <summary>
+        /// Get the current mouse position over the virtual screen.
+        /// </summary>
+        /// <returns>The mouse position, relative to the virtual screen.</returns>
+        public static Point GetCurrentMousePositionOverVirtualScreen()
+        {
+            var p = Control.MousePosition;
+            p.X += Math.Abs(SystemInformation.VirtualScreen.Left);
+            p.Y += Math.Abs(SystemInformation.VirtualScreen.Top);
+
+            return p;
+        }
+
+        /// <summary>
+        /// Get the virtual screen as a bitmap.
+        /// </summary>
+        /// <returns>The virtual screen as a bitmap.</returns>
+        public static Bitmap GetVirtualScreenAsBitmap()
+        {
+            // determine the size of the "virtual screen", which includes all monitor
+            var screenLeft = SystemInformation.VirtualScreen.Left;
+            var screenTop = SystemInformation.VirtualScreen.Top;
+            var screenWidth = SystemInformation.VirtualScreen.Width;
+            var screenHeight = SystemInformation.VirtualScreen.Height;
+
+            // create a bitmap of the appropriate size to receive the screen shot
+            var bmp = new Bitmap(screenWidth, screenHeight);
+
+            // draw the screen shot into the bitmap
+            using (var g = Graphics.FromImage(bmp))
+                g.CopyFromScreen(screenLeft, screenTop, 0, 0, bmp.Size);
+
+            return bmp;
+        }
 
         /// <summary>
         /// Get a bitmap of the entire desktop area.

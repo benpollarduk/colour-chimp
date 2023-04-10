@@ -620,7 +620,7 @@ namespace BP.ColourChimp.Windows
         private void BeginColorPicking()
         {
             Mode = Mode.Pipette;
-            var bmp = GetVirtualScreenBitmap();
+            var bmp = DesktopHelper.GetVirtualScreenAsBitmap();
             bool wasError;
 
             ThreadPool.QueueUserWorkItem(state =>
@@ -628,7 +628,6 @@ namespace BP.ColourChimp.Windows
                 do
                 {
                     // keep going while mouse down or modifier key down and no error
-
                     wasError = !(bool)Dispatcher.Invoke(new UpdatePixelCallback(UpdateColorToPixelAtCurrentPoint), bmp);
 
                     if (!wasError)
@@ -643,33 +642,6 @@ namespace BP.ColourChimp.Windows
             }, bmp);
         }
 
-        private Point GetCurrentMousePositionOverVirtualScreen()
-        {
-            var p = System.Windows.Forms.Control.MousePosition;
-            p.X += Math.Abs(SystemInformation.VirtualScreen.Left);
-            p.Y += Math.Abs(SystemInformation.VirtualScreen.Top);
-
-            return p;
-        }
-
-        private Bitmap GetVirtualScreenBitmap()
-        {
-            // determine the size of the "virtual screen", which includes all monitor
-            var screenLeft = SystemInformation.VirtualScreen.Left;
-            var screenTop = SystemInformation.VirtualScreen.Top;
-            var screenWidth = SystemInformation.VirtualScreen.Width;
-            var screenHeight = SystemInformation.VirtualScreen.Height;
-
-            // create a bitmap of the appropriate size to receive the screen shot
-            var bmp = new Bitmap(screenWidth, screenHeight);
-
-            // draw the screen shot into the bitmap
-            using (var g = Graphics.FromImage(bmp))
-                g.CopyFromScreen(screenLeft, screenTop, 0, 0, bmp.Size);
-
-            return bmp;
-        }
-
         private bool UpdateColorToPixelAtCurrentPoint(Bitmap bmp)
         {
             try
@@ -677,7 +649,7 @@ namespace BP.ColourChimp.Windows
                 if (bmp == null) 
                     return false;
 
-                var cursorPosition = GetCurrentMousePositionOverVirtualScreen();
+                var cursorPosition = DesktopHelper.GetCurrentMousePositionOverVirtualScreen();
                 var c = bmp.GetPixel(cursorPosition.X, cursorPosition.Y);
 
                 switch (ColorSpace)
@@ -723,51 +695,11 @@ namespace BP.ColourChimp.Windows
             }
         }
 
-        private byte IncrementByte(byte b)
-        {
-            if (b < 239)
-                b += 16;
-            else
-                b = 255;
-
-            return b;
-        }
-
-        private byte DeincrementByte(byte b)
-        {
-            if (b > 15)
-                b -= 16;
-            else
-                b = 0;
-
-            return b;
-        }
-
-        private double IncrementDouble(double d)
-        {
-            if (d < 90)
-                d += 10;
-            else
-                d = 100;
-
-            return d;
-        }
-
-        private double DecrementDouble(double d)
-        {
-            if (d > 9)
-                d -= 10;
-            else
-                d = 0;
-
-            return d;
-        }
-
         private void GatherAllPixelsInROI(int top, int left, int bottom, int right)
         {
             try
             {
-                var bmp = GetVirtualScreenBitmap();
+                var bmp = DesktopHelper.GetVirtualScreenAsBitmap();
                 GatherAllPixelsInROI(top, left, bottom, right, bmp);
             }
             catch (Exception e)
@@ -781,13 +713,10 @@ namespace BP.ColourChimp.Windows
             try
             {
                 Status = "Beginning screen region gather...";
-
-                roiGatherWorker?.CancelAsync();
-
-                roiGatherWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
-
                 AllBackgroundOperationsIdle = false;
 
+                roiGatherWorker?.CancelAsync();
+                roiGatherWorker = new BackgroundWorker { WorkerSupportsCancellation = true };
                 roiGatherWorker.DoWork += (sender, args) =>
                 {
                     var pixels = new List<string>();
@@ -908,7 +837,7 @@ namespace BP.ColourChimp.Windows
             }
         }
 
-        private void SortColors(Comparison<Rectangle> sortMethod)
+        private void SortRectangles(Comparison<Rectangle> sortMethod)
         {
             Mode = Mode.Sort;
             AllBackgroundOperationsIdle = false;
@@ -1360,15 +1289,6 @@ namespace BP.ColourChimp.Windows
 
         #endregion
 
-        #region StaticMethods
-
-        private static double GetTwoColorProportion(double colorA, double colorB)
-        {
-            return (colorA + colorB) / 2;
-        }
-
-        #endregion
-
         #region PropertyCallbacks
 
         private static void OnSharedARGBPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
@@ -1512,7 +1432,7 @@ namespace BP.ColourChimp.Windows
                     window.ColoursGrid.Columns = (int)window.FixedColumns;
 
                     foreach (Rectangle r in window.ColoursGrid.Children)
-                        r.Style = window.ColoursGrid.FindResource("squareRectangleStyle") as Style;
+                        r.Style = window.ColoursGrid.FindResource("SquareRectangleStyle") as Style;
 
                     break;
                 default:
@@ -1588,36 +1508,36 @@ namespace BP.ColourChimp.Windows
                         Status = "Drag to the bottom right of the region and release Shift to complete selection...";
 
                         if (roiSelectionTopLeft == null)
-                            roiSelectionTopLeft = GetCurrentMousePositionOverVirtualScreen();
+                            roiSelectionTopLeft = DesktopHelper.GetCurrentMousePositionOverVirtualScreen();
                     }
 
                     break;
 
                 case DecrementAlphaKeyWPF:
                     
-                    Alpha = DeincrementByte(Alpha);
+                    Alpha = ValueModification.DecrementByteBy16(Alpha);
 
                     break;
 
                 case DeccrementBrightnessKeyWPF:
                     
-                    Red = DeincrementByte(Red);
-                    Green = DeincrementByte(Green);
-                    Blue = DeincrementByte(Blue);
+                    Red = ValueModification.DecrementByteBy16(Red);
+                    Green = ValueModification.DecrementByteBy16(Green);
+                    Blue = ValueModification.DecrementByteBy16(Blue);
 
                     break;
 
                 case IncrementAlphaKeyWPF:
                     
-                    Alpha = IncrementByte(Alpha);
+                    Alpha = ValueModification.IncrementByteBy16(Alpha);
 
                     break;
 
                 case IncrementBrightnessKeyWPF:
                     
-                    Red = IncrementByte(Red);
-                    Green = IncrementByte(Green);
-                    Blue = IncrementByte(Blue);
+                    Red = ValueModification.IncrementByteBy16(Red);
+                    Green = ValueModification.IncrementByteBy16(Green);
+                    Blue = ValueModification.IncrementByteBy16(Blue);
 
                     break;
 
@@ -1657,7 +1577,7 @@ namespace BP.ColourChimp.Windows
                         case Mode.ROIGather:
                             {
                                 Mode = defaultMode;
-                                roiSelectionBottomRight = GetCurrentMousePositionOverVirtualScreen();
+                                roiSelectionBottomRight = DesktopHelper.GetCurrentMousePositionOverVirtualScreen();
 
                                 if (roiSelectionTopLeft.HasValue)
                                 {
@@ -1754,112 +1674,112 @@ namespace BP.ColourChimp.Windows
 
         private void IncrementAlphaButton_Click(object sender, RoutedEventArgs e)
         {
-            Alpha = IncrementByte(Alpha);
+            Alpha = ValueModification.IncrementByteBy16(Alpha);
         }
 
         private void IncrementRedButton_Click(object sender, RoutedEventArgs e)
         {
-            Red = IncrementByte(Red);
+            Red = ValueModification.IncrementByteBy16(Red);
         }
 
         private void IncrementGreenButton_Click(object sender, RoutedEventArgs e)
         {
-            Green = IncrementByte(Green);
+            Green = ValueModification.IncrementByteBy16(Green);
         }
 
         private void IncrementBlueButton_Click(object sender, RoutedEventArgs e)
         {
-            Blue = IncrementByte(Blue);
+            Blue = ValueModification.IncrementByteBy16(Blue);
         }
 
         private void DecrementBlueButton_Click(object sender, RoutedEventArgs e)
         {
-            Blue = DeincrementByte(Blue);
+            Blue = ValueModification.DecrementByteBy16(Blue);
         }
 
         private void DecrementGreenButton_Click(object sender, RoutedEventArgs e)
         {
-            Green = DeincrementByte(Green);
+            Green = ValueModification.DecrementByteBy16(Green);
         }
 
         private void DecrementRedButton_Click(object sender, RoutedEventArgs e)
         {
-            Red = DeincrementByte(Red);
+            Red = ValueModification.DecrementByteBy16(Red);
         }
 
         private void DecrementAlphaButton_Click(object sender, RoutedEventArgs e)
         {
-            Alpha = DeincrementByte(Alpha);
+            Alpha = ValueModification.DecrementByteBy16(Alpha);
         }
 
         private void IncrementCyanButton_Click(object sender, RoutedEventArgs e)
         {
-            Cyan = IncrementDouble(Cyan);
+            Cyan = ValueModification.IncrementDoubleBy10(Cyan);
         }
 
         private void IncrementYellowButton_Click(object sender, RoutedEventArgs e)
         {
-            Yellow = IncrementDouble(Yellow);
+            Yellow = ValueModification.IncrementDoubleBy10(Yellow);
         }
 
         private void IncrementKeyButton_Click(object sender, RoutedEventArgs e)
         {
-            K = IncrementDouble(K);
+            K = ValueModification.IncrementDoubleBy10(K);
         }
 
         private void IncrementMagentaButton_Click(object sender, RoutedEventArgs e)
         {
-            Magenta = IncrementDouble(Magenta);
+            Magenta = ValueModification.IncrementDoubleBy10(Magenta);
         }
 
         private void DecrementCyanButton_Click(object sender, RoutedEventArgs e)
         {
-            Cyan = DecrementDouble(Cyan);
+            Cyan = ValueModification.DecrementDoubleBy10(Cyan);
         }
 
         private void DecrementMagentaButton_Click(object sender, RoutedEventArgs e)
         {
-            Magenta = DecrementDouble(Magenta);
+            Magenta = ValueModification.DecrementDoubleBy10(Magenta);
         }
 
         private void DecrementYellowButton_Click(object sender, RoutedEventArgs e)
         {
-            Yellow = DecrementDouble(Yellow);
+            Yellow = ValueModification.DecrementDoubleBy10(Yellow);
         }
 
         private void DecrementKeyButton_Click(object sender, RoutedEventArgs e)
         {
-            K = DecrementDouble(K);
+            K = ValueModification.DecrementDoubleBy10(K);
         }
 
         private void IncrementHueButton_Click(object sender, RoutedEventArgs e)
         {
-            Hue = IncrementDouble(Hue);
+            Hue = ValueModification.IncrementDoubleBy10(Hue);
         }
 
         private void IncrementSaturationButton_Click(object sender, RoutedEventArgs e)
         {
-            Saturation = IncrementDouble(Saturation);
+            Saturation = ValueModification.IncrementDoubleBy10(Saturation);
         }
 
         private void IncrementValueButton_Click(object sender, RoutedEventArgs e)
         {
-            Value = IncrementDouble(Value);
+            Value = ValueModification.IncrementDoubleBy10(Value);
         }
 
         private void DecrementHueButton_Click(object sender, RoutedEventArgs e)
         {
-            Hue = DecrementDouble(Hue);
+            Hue = ValueModification.DecrementDoubleBy10(Hue);
         }
 
         private void DecrementSaturationButton_Click(object sender, RoutedEventArgs e)
         {
-            Saturation = DecrementDouble(Saturation);
+            Saturation = ValueModification.DecrementDoubleBy10(Saturation);
         }
 
         private void DecrementValueButton_Click(object sender, RoutedEventArgs e)
         {
-            Value = DecrementDouble(Value);
+            Value = ValueModification.DecrementDoubleBy10(Value);
         }
 
         private void InfoButton_Click(object sender, RoutedEventArgs e)
@@ -1965,27 +1885,27 @@ namespace BP.ColourChimp.Windows
 
         private void SortRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SortColors(new ARGBSorter().Sort);
+            SortRectangles(new ARGBSorter().Sort);
         }
 
         private void SortCMYCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SortColors(new CMYKSorter().Sort);
+            SortRectangles(new CMYKSorter().Sort);
         }
 
         private void SortHSVCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SortColors(new HSVSorter().Sort);
+            SortRectangles(new HSVSorter().Sort);
         }
 
         private void SortGrayscaleCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SortColors(new GreyscaleSorter().Sort);
+            SortRectangles(new GreyscaleSorter().Sort);
         }
 
         private void randomizeCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SortColors(new RandomSorter(RandomGenerator).Sort);
+            SortRectangles(new RandomSorter(RandomGenerator).Sort);
         }
 
         private void DiscardNonDominantRGBCommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)

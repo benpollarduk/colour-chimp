@@ -55,6 +55,7 @@
             <converters:ObjectEqualsObjectToBooleanConverter x:Key="ObjectEqualsObjectToBooleanConverter"/>
             <converters:DoubleEqualsValueToBooleanConverter x:Key="DoubleEqualsValueToBooleanConverter"/>
             <converters:DoubleNotEqualsValueToBooleanConverter x:Key="DoubleNotEqualsValueToBooleanConverter"/>
+            <converters:GridModeToBooleanConverter x:Key="GridModeToBooleanConverter"/>
             <Style TargetType="{x:Type Label}">
                 <Setter Property="FontWeight" Value="Bold"/>
                 <Setter Property="Foreground" Value="White"/>
@@ -271,11 +272,7 @@
                 <MenuItem Header="Grid Modes" IsEnabled="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}">
                     <MenuItem ToolTip="When selected colours are sized to a grid. When not selected colours are arranged by the specified number of columns" Header="Size Colours To Grid" StaysOpenOnClick="True" IsCheckable="True">
                         <MenuItem.IsChecked>
-                            <Binding Path="GridMode" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
-                                <Binding.ConverterParameter>
-                                    <classes:GridMode>FitToArea</classes:GridMode>
-                                </Binding.ConverterParameter>
-                            </Binding>
+                            <Binding Path="GridMode" Mode="TwoWay" Converter="{StaticResource GridModeToBooleanConverter}"/>
                         </MenuItem.IsChecked>
                     </MenuItem>
                     <MenuItem Header="Columns">
@@ -895,7 +892,7 @@
                     <Label Content="V:" Grid.Row="0" Grid.Column="3"/>
                     <Label Content="Normalised" Grid.Row="2" Grid.Column="0"/>
                     <Label Content="%" Grid.Row="3" Grid.Column="0"/>
-                    <Label Content="D, N ,B" Grid.Row="4" Grid.Column="0"/>
+                    <Label Content="D, N, B" Grid.Row="4" Grid.Column="0"/>
                     <Button Name="IncrementHueButton" Content="+" Grid.Row="1" Grid.Column="1" Click="IncrementHueButton_Click">
                         <Button.IsEnabled>
                             <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">

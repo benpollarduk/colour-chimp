@@ -61,6 +61,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Classes\ValueModification.cs" />
+    <Compile Include="Converters\GridModeToBooleanConverter.cs" />
     <Compile Include="Converters\BooleanToVisibilityCollapsedConverter.cs" />
     <Compile Include="Converters\DoubleEqualsValueToBooleanConverter.cs" />
     <Compile Include="Converters\DoubleNotEqualsValueToBooleanConverter.cs" />
