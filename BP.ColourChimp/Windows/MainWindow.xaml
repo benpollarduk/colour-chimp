@@ -5,76 +5,84 @@
         xmlns:controls="clr-namespace:BP.ColourChimp.Controls"
         xmlns:converters="clr-namespace:BP.ColourChimp.Converters"
         xmlns:classes="clr-namespace:BP.ColourChimp.Classes"
-        xmlns:validation="clr-namespace:BP.ColourChimp.Validation" Title="Colour Chimp" Height="650" MinHeight="550" Width="650" MinWidth="650" SizeToContent="Manual" WindowStartupLocation="CenterScreen" Background="{StaticResource backgroundBrush}" DataContext="{Binding RelativeSource={RelativeSource Self}}" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp" MouseDown="Window_MouseDown" Closing="Window_Closing">
+        xmlns:validation="clr-namespace:BP.ColourChimp.Validation" Title="Colour Chimp" Height="650" MinHeight="550" Width="650" MinWidth="650" SizeToContent="Manual" WindowStartupLocation="CenterScreen" DataContext="{Binding RelativeSource={RelativeSource Self}}" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp" MouseDown="Window_MouseDown" Closing="Window_Closing">
     <Window.Resources>
-        <RoutedUICommand x:Key="ImportCommand" Text="Import..."/>
-        <RoutedUICommand x:Key="ExportCommand" Text="Export..."/>
-        <RoutedUICommand x:Key="ExitCommand" Text="Exit"/>
-        <RoutedUICommand x:Key="AddCommand" Text="Add Current"/>
-        <RoutedUICommand x:Key="PopulateBalancedRedsCommand" Text="Reds"/>
-        <RoutedUICommand x:Key="PopulateBalancedGreensCommand" Text="Greens"/>
-        <RoutedUICommand x:Key="PopulateBalancedBluesCommand" Text="Blues"/>
-        <RoutedUICommand x:Key="PopulateBalancedCyansCommand" Text="Cyans"/>
-        <RoutedUICommand x:Key="PopulateBalancedMagentasCommand" Text="Magentas"/>
-        <RoutedUICommand x:Key="PopulateBalancedYellowsCommand" Text="Yellows"/>
-        <RoutedUICommand x:Key="PopulateGrayscaleCommand" Text="Achromatic Grayscale"/>
-        <RoutedUICommand x:Key="PopulatePresentationFrameworkColoursCommand" Text="Presentation Framework"/>
-        <RoutedUICommand x:Key="PopulateSystemColoursCommand" Text="System Colours"/>
-        <RoutedUICommand x:Key="SortRGBCommand" Text="By RGB"/>
-        <RoutedUICommand x:Key="SortCMYCommand" Text="By CMYK"/>
-        <RoutedUICommand x:Key="SortHSVCommand" Text="By HSV"/>
-        <RoutedUICommand x:Key="SortRelativeGrayscaleCommand" Text="By Relative Grayscale"/>
-        <RoutedUICommand x:Key="RandomizeCommand" Text="Randomise"/>
-        <RoutedUICommand x:Key="DiscardNonDominantRGBCommand" Text="Discard Colours with No Dominant RGB Channel"/>
-        <RoutedUICommand x:Key="DiscardDominantRGBCommand" Text="Discard Colours with Dominant RGB Channel"/>
-        <RoutedUICommand x:Key="DiscardNonDominantCMYCommand" Text="Discard Colours with No Dominant CMY Channel"/>
-        <RoutedUICommand x:Key="DiscardDominantCMYCommand" Text="Discard Colours with Dominant CMY Channel"/>
-        <RoutedUICommand x:Key="DiscardNonDominantGrayscaleCommand" Text="Discard Non-achromatic Grayscale Colours"/>
-        <RoutedUICommand x:Key="DiscardDominantGrayscaleCommand" Text="Discard Achromatic Grayscale Colours"/>
-        <RoutedUICommand x:Key="DiscardDuplicatesCommand" Text="Discard Duplicates of Colours"/>
-        <RoutedUICommand x:Key="SelectiveRemovalCommand" Text="Remove by Selection..."/>
-        <RoutedUICommand x:Key="RemoveLastCommand" Text="Remove Last"/>
-        <RoutedUICommand x:Key="RemoveAllCommand" Text="Remove All"/>
-        <RoutedUICommand x:Key="GatherROICommand" Text="Screen Region..."/>
-        <RoutedUICommand x:Key="GatherFullScreenCommand" Text="Current Screen"/>
-        <RoutedUICommand x:Key="AboutCommand" Text="About Colour Chimp..."/>
-        <converters:ByteToHexStringConverter x:Key="ByteToHexStringConverter"/>
-        <converters:ByteToDoublePercentConverter x:Key="ByteToDoublePercentConverter"/>
-        <converters:GridModeToVerticalAlignmentConverter x:Key="GridModeToVerticalAlignmentConverter"/>
-        <converters:DoublePercentageToNormalisedDoubleConverter x:Key="DoublePercentageToNormalisedDoubleConverter"/>
-        <converters:DoublePercentageToDoubleDegreesConverter x:Key="DoublePercentageToDoubleDegreesConverter"/>
-        <converters:DoublePercentageToByteConverter x:Key="DoublePercentageToByteConverter"/>
-        <converters:MultipleBooleanAndToSingleBooleanConverter x:Key="MultipleBooleanAndToSingleBooleanConverter"/>
-        <converters:ObjectEqualsObjectToBooleanConverter x:Key="ObjectEqualsObjectToBooleanConverter"/>
-        <converters:DoubleEqualsValueToBooleanConverter x:Key="DoubleEqualsValueToBooleanConverter"/>
-        <converters:DoubleNotEqualsValueToBooleanConverter x:Key="DoubleNotEqualsValueToBooleanConverter"/>
-        <Style TargetType="{x:Type Label}">
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-        </Style>
-        <Style TargetType="{x:Type controls:ClickSelectTextBox}">
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="Black"/>
-            <Setter Property="Margin" Value="2"/>
-            <Setter Property="CharacterCasing" Value="Upper"/>
-            <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
-            <Style.Triggers>
-                <Trigger Property="Validation.HasError" Value="True">
-                    <Setter Property="Foreground" Value="Red"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource buttonStyle}">
-            <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
-        </Style>
-        <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource toggleButtonStyle}">
-            <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles/Brushes.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/ButtonStyles.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/CheckBoxStyles.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/MenuItemStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <RoutedUICommand x:Key="ImportCommand" Text="Import..."/>
+            <RoutedUICommand x:Key="ExportCommand" Text="Export..."/>
+            <RoutedUICommand x:Key="ExitCommand" Text="Exit"/>
+            <RoutedUICommand x:Key="AddCommand" Text="Add Current"/>
+            <RoutedUICommand x:Key="PopulateBalancedRedsCommand" Text="Reds"/>
+            <RoutedUICommand x:Key="PopulateBalancedGreensCommand" Text="Greens"/>
+            <RoutedUICommand x:Key="PopulateBalancedBluesCommand" Text="Blues"/>
+            <RoutedUICommand x:Key="PopulateBalancedCyansCommand" Text="Cyans"/>
+            <RoutedUICommand x:Key="PopulateBalancedMagentasCommand" Text="Magentas"/>
+            <RoutedUICommand x:Key="PopulateBalancedYellowsCommand" Text="Yellows"/>
+            <RoutedUICommand x:Key="PopulateGrayscaleCommand" Text="Achromatic Grayscale"/>
+            <RoutedUICommand x:Key="PopulatePresentationFrameworkColoursCommand" Text="Presentation Framework"/>
+            <RoutedUICommand x:Key="PopulateSystemColoursCommand" Text="System Colours"/>
+            <RoutedUICommand x:Key="SortRGBCommand" Text="By RGB"/>
+            <RoutedUICommand x:Key="SortCMYCommand" Text="By CMYK"/>
+            <RoutedUICommand x:Key="SortHSVCommand" Text="By HSV"/>
+            <RoutedUICommand x:Key="SortRelativeGrayscaleCommand" Text="By Relative Grayscale"/>
+            <RoutedUICommand x:Key="RandomizeCommand" Text="Randomise"/>
+            <RoutedUICommand x:Key="DiscardNonDominantRGBCommand" Text="Discard Colours with No Dominant RGB Channel"/>
+            <RoutedUICommand x:Key="DiscardDominantRGBCommand" Text="Discard Colours with Dominant RGB Channel"/>
+            <RoutedUICommand x:Key="DiscardNonDominantCMYCommand" Text="Discard Colours with No Dominant CMY Channel"/>
+            <RoutedUICommand x:Key="DiscardDominantCMYCommand" Text="Discard Colours with Dominant CMY Channel"/>
+            <RoutedUICommand x:Key="DiscardNonDominantGrayscaleCommand" Text="Discard Non-achromatic Grayscale Colours"/>
+            <RoutedUICommand x:Key="DiscardDominantGrayscaleCommand" Text="Discard Achromatic Grayscale Colours"/>
+            <RoutedUICommand x:Key="DiscardDuplicatesCommand" Text="Discard Duplicates of Colours"/>
+            <RoutedUICommand x:Key="SelectiveRemovalCommand" Text="Remove by Selection..."/>
+            <RoutedUICommand x:Key="RemoveLastCommand" Text="Remove Last"/>
+            <RoutedUICommand x:Key="RemoveAllCommand" Text="Remove All"/>
+            <RoutedUICommand x:Key="GatherROICommand" Text="Screen Region..."/>
+            <RoutedUICommand x:Key="GatherFullScreenCommand" Text="Current Screen"/>
+            <RoutedUICommand x:Key="AboutCommand" Text="About Colour Chimp..."/>
+            <converters:ByteToHexStringConverter x:Key="ByteToHexStringConverter"/>
+            <converters:ByteToDoublePercentConverter x:Key="ByteToDoublePercentConverter"/>
+            <converters:GridModeToVerticalAlignmentConverter x:Key="GridModeToVerticalAlignmentConverter"/>
+            <converters:DoublePercentageToNormalisedDoubleConverter x:Key="DoublePercentageToNormalisedDoubleConverter"/>
+            <converters:DoublePercentageToDoubleDegreesConverter x:Key="DoublePercentageToDoubleDegreesConverter"/>
+            <converters:DoublePercentageToByteConverter x:Key="DoublePercentageToByteConverter"/>
+            <converters:MultipleBooleanAndToSingleBooleanConverter x:Key="MultipleBooleanAndToSingleBooleanConverter"/>
+            <converters:ObjectEqualsObjectToBooleanConverter x:Key="ObjectEqualsObjectToBooleanConverter"/>
+            <converters:DoubleEqualsValueToBooleanConverter x:Key="DoubleEqualsValueToBooleanConverter"/>
+            <converters:DoubleNotEqualsValueToBooleanConverter x:Key="DoubleNotEqualsValueToBooleanConverter"/>
+            <Style TargetType="{x:Type Label}">
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="{x:Type controls:ClickSelectTextBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="Margin" Value="2"/>
+                <Setter Property="CharacterCasing" Value="Upper"/>
+                <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
+                <Style.Triggers>
+                    <Trigger Property="Validation.HasError" Value="True">
+                        <Setter Property="Foreground" Value="Red"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource BaseButtonStyle}">
+                <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
+            </Style>
+            <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource BaseToggleButtonStyle}">
+                <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding x:Name="ImportComandBinding" Command="{StaticResource ImportCommand}" Executed="ImportComandBinding_Executed"/>
@@ -122,7 +130,7 @@
         <KeyBinding Command="{StaticResource ImportCommand}" Gesture="Ctrl+Shift+I"/>
         <KeyBinding Command="{StaticResource ExportCommand}" Gesture="Ctrl+Shift+E"/>
     </Window.InputBindings>
-    <Grid>
+    <Grid Background="{StaticResource BackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition MinHeight="50" Height="*"/>
@@ -387,9 +395,6 @@
                             <Setter Property="StrokeThickness" Value="0"/>
                         </Style>
                         <Style TargetType="{x:Type Rectangle}" BasedOn="{StaticResource SizeableRectangleStyle}"/>
-                        <Style x:Key="SquareRectangleStyle" TargetType="Rectangle" BasedOn="{StaticResource SizeableRectangleStyle}">
-                            <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Mode=OneWay}"/>
-                        </Style>
                     </UniformGrid.Resources>
                 </UniformGrid>
             </ScrollViewer>

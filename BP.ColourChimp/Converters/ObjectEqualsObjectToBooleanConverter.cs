@@ -4,7 +4,8 @@ using System.Windows.Data;
 
 namespace BP.ColourChimp.Converters
 {
-    public class ObjectEqualsObjectToBooleanConverter : IValueConverter
+    [ValueConversion(typeof(object), typeof(bool))]
+    internal class ObjectEqualsObjectToBooleanConverter : IValueConverter
     {
         #region Implementation of IValueConverter
 

@@ -5,7 +5,7 @@ using System.Windows.Data;
 namespace BP.ColourChimp.Converters
 {
     [ValueConversion(typeof(double), typeof(double))]
-    public class DoublePercentageToDoubleDegreesConverter : IValueConverter
+    internal class DoublePercentageToDoubleDegreesConverter : IValueConverter
     {
         #region Implementation of IValueConverter
 

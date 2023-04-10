@@ -4,10 +4,15 @@
         Title="About Colour Chimp" Height="Auto" Width="425" SizeToContent="Height" ResizeMode="NoResize"
         ShowInTaskbar="False" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
     <Window.Resources>
-        <Style TargetType="{x:Type Label}">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles/Brushes.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="{x:Type Label}">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
     <Grid Background="Black">
         <Grid.RowDefinitions>
@@ -18,7 +23,6 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="100"/>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="100"/>
         </Grid.ColumnDefinitions>
         <Image Source="/Resources/Icons/Icon.png" Margin="6" Grid.RowSpan="6"/>
         <Label Content="Colour Chimp" FontSize="18" Grid.Row="0" Grid.Column="1"/>

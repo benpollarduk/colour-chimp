@@ -5,7 +5,8 @@ using System.Windows.Data;
 
 namespace BP.ColourChimp.Converters
 {
-    public class ObjectEqualsObjectToVisibilityConverter : IValueConverter
+    [ValueConversion(typeof(object), typeof(Visibility))]
+    internal class ObjectEqualsObjectToVisibilityConverter : IValueConverter
     {
         #region Implementation of IValueConverter
 

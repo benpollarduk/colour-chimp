@@ -5,8 +5,8 @@ using System.Windows.Data;
 
 namespace BP.ColourChimp.Converters
 {
-    [ValueConversion(typeof(bool), typeof(bool))]
-    public class MultipleBooleanAndToSingleBooleanConverter : IMultiValueConverter
+    [ValueConversion(typeof(bool[]), typeof(bool))]
+    internal class MultipleBooleanAndToSingleBooleanConverter : IMultiValueConverter
     {
         #region Implementation of IMultiValueConverter
 

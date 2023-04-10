@@ -6,7 +6,7 @@ using System.Windows.Data;
 namespace BP.ColourChimp.Converters
 {
     [ValueConversion(typeof(bool), typeof(Visibility))]
-    public class BooleanToVisibilityCollapsedConverter : IValueConverter
+    internal class BooleanToVisibilityCollapsedConverter : IValueConverter
     {
         #region IValueConverter Members
 

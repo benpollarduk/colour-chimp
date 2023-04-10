@@ -5,7 +5,8 @@ using BP.ColourChimp.Extensions;
 
 namespace BP.ColourChimp.Converters
 {
-    public class DoubleEqualsValueToBooleanConverter : IValueConverter
+    [ValueConversion(typeof(double), typeof(bool))]
+    internal class DoubleEqualsValueToBooleanConverter : IValueConverter
     {
         #region Implementation of IValueConverter
 

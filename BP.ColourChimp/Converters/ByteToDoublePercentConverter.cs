@@ -5,7 +5,7 @@ using System.Windows.Data;
 namespace BP.ColourChimp.Converters
 {
     [ValueConversion(typeof(byte), typeof(double))]
-    public class ByteToDoublePercentConverter : IValueConverter
+    internal class ByteToDoublePercentConverter : IValueConverter
     {
         #region IValueConverter Members
 

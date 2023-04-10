@@ -5,7 +5,7 @@ using System.Windows.Data;
 namespace BP.ColourChimp.Converters
 {
     [ValueConversion(typeof(byte), typeof(string))]
-    public class ByteToHexStringConverter : IValueConverter
+    internal class ByteToHexStringConverter : IValueConverter
     {
         #region IValueConverter Members
 
