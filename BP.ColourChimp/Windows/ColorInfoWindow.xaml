@@ -114,7 +114,7 @@
                 </Border>
             </Grid>
         </Border>
-        <Expander Name="RGBExpander" Header="RGB (Red, Green, Blue) Colour Info" Grid.Row="1">
+        <Expander Name="RGBExpander" Header="RGB Colour Info" Grid.Row="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -158,7 +158,7 @@
                 </Button>
             </Grid>
         </Expander>
-        <Expander Name="ARGBExpander" Header="ARGB (Alpha, Red, Green, Blue) Colour Info" Grid.Row="2">
+        <Expander Name="ARGBExpander" Header="ARGB Colour Info" Grid.Row="2">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -202,7 +202,7 @@
                 </Button>
             </Grid>
         </Expander>
-        <Expander Name="CMYKExpander" Header="CMYK (Cyan, Magenta, Yellow, Key) Colour Info" Grid.Row="3">
+        <Expander Name="CMYKExpander" Header="CMYK Colour Info" Grid.Row="3">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -229,7 +229,7 @@
                 </Button>
             </Grid>
         </Expander>
-        <Expander Name="HSVExpander" Header="HSV (Hue, Saturation, Value) Colour Info" Grid.Row="4">
+        <Expander Name="HSVExpander" Header="HSV Colour Info" Grid.Row="4">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
