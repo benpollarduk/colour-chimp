@@ -1,0 +1,32 @@
+﻿<Window x:Class="BP.ColourChimp.Windows.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="About Colour Chimp" Height="Auto" Width="425" SizeToContent="Height" ResizeMode="NoResize"
+        ShowInTaskbar="False" WindowStyle="ToolWindow" WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles/Brushes.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style TargetType="{x:Type Label}">
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Background="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Image Source="/Resources/Icons/Icon.png" Margin="6" Grid.RowSpan="6"/>
+        <Label Content="Colour Chimp" FontSize="18" Grid.Row="0" Grid.Column="1"/>
+        <Label Name="VersionLabel" Content="Version ?.?.?.?" FontSize="12" Grid.Row="1" Grid.Column="1"/>
+        <Label Content="Developed By Ben Pollard 2010 - 2023" Grid.Row="2" Grid.Column="1"/>
+    </Grid>
+</Window>

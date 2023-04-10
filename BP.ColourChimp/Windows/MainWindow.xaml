@@ -1,0 +1,1097 @@
+﻿<Window x:Class="BP.ColourChimp.Windows.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        xmlns:controls="clr-namespace:BP.ColourChimp.Controls"
+        xmlns:converters="clr-namespace:BP.ColourChimp.Converters"
+        xmlns:classes="clr-namespace:BP.ColourChimp.Classes"
+        xmlns:validation="clr-namespace:BP.ColourChimp.Validation" Title="Colour Chimp" Height="650" MinHeight="550" Width="650" MinWidth="650" SizeToContent="Manual" WindowStartupLocation="CenterScreen" DataContext="{Binding RelativeSource={RelativeSource Self}}" KeyDown="Window_KeyDown" KeyUp="Window_KeyUp" MouseDown="Window_MouseDown" Closing="Window_Closing">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="../Resources/Styles/Brushes.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/ButtonStyles.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/CheckBoxStyles.xaml"/>
+                <ResourceDictionary Source="../Resources/Styles/MenuItemStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <RoutedUICommand x:Key="ImportCommand" Text="Import..."/>
+            <RoutedUICommand x:Key="ExportCommand" Text="Export..."/>
+            <RoutedUICommand x:Key="ExitCommand" Text="Exit"/>
+            <RoutedUICommand x:Key="AddCommand" Text="Add Current"/>
+            <RoutedUICommand x:Key="PopulateBalancedRedsCommand" Text="Reds"/>
+            <RoutedUICommand x:Key="PopulateBalancedGreensCommand" Text="Greens"/>
+            <RoutedUICommand x:Key="PopulateBalancedBluesCommand" Text="Blues"/>
+            <RoutedUICommand x:Key="PopulateBalancedCyansCommand" Text="Cyans"/>
+            <RoutedUICommand x:Key="PopulateBalancedMagentasCommand" Text="Magentas"/>
+            <RoutedUICommand x:Key="PopulateBalancedYellowsCommand" Text="Yellows"/>
+            <RoutedUICommand x:Key="PopulateGrayscaleCommand" Text="Achromatic Grayscale"/>
+            <RoutedUICommand x:Key="PopulatePresentationFrameworkColoursCommand" Text="Presentation Framework"/>
+            <RoutedUICommand x:Key="PopulateSystemColoursCommand" Text="System Colours"/>
+            <RoutedUICommand x:Key="SortRGBCommand" Text="By RGB"/>
+            <RoutedUICommand x:Key="SortCMYCommand" Text="By CMYK"/>
+            <RoutedUICommand x:Key="SortHSVCommand" Text="By HSV"/>
+            <RoutedUICommand x:Key="SortRelativeGrayscaleCommand" Text="By Relative Grayscale"/>
+            <RoutedUICommand x:Key="RandomizeCommand" Text="Randomise"/>
+            <RoutedUICommand x:Key="DiscardNonDominantRGBCommand" Text="Discard Colours with No Dominant RGB Channel"/>
+            <RoutedUICommand x:Key="DiscardDominantRGBCommand" Text="Discard Colours with Dominant RGB Channel"/>
+            <RoutedUICommand x:Key="DiscardNonDominantCMYCommand" Text="Discard Colours with No Dominant CMY Channel"/>
+            <RoutedUICommand x:Key="DiscardDominantCMYCommand" Text="Discard Colours with Dominant CMY Channel"/>
+            <RoutedUICommand x:Key="DiscardNonDominantGrayscaleCommand" Text="Discard Non-achromatic Grayscale Colours"/>
+            <RoutedUICommand x:Key="DiscardDominantGrayscaleCommand" Text="Discard Achromatic Grayscale Colours"/>
+            <RoutedUICommand x:Key="DiscardDuplicatesCommand" Text="Discard Duplicates of Colours"/>
+            <RoutedUICommand x:Key="SelectiveRemovalCommand" Text="Remove by Selection..."/>
+            <RoutedUICommand x:Key="RemoveLastCommand" Text="Remove Last"/>
+            <RoutedUICommand x:Key="RemoveAllCommand" Text="Remove All"/>
+            <RoutedUICommand x:Key="GatherROICommand" Text="Screen Region..."/>
+            <RoutedUICommand x:Key="GatherFullScreenCommand" Text="Current Screen"/>
+            <RoutedUICommand x:Key="AboutCommand" Text="About Colour Chimp..."/>
+            <RoutedUICommand x:Key="SetGridColumnsCommand"/>
+            <converters:ByteToHexStringConverter x:Key="ByteToHexStringConverter"/>
+            <converters:ByteToDoublePercentConverter x:Key="ByteToDoublePercentConverter"/>
+            <converters:GridModeToVerticalAlignmentConverter x:Key="GridModeToVerticalAlignmentConverter"/>
+            <converters:DoublePercentageToNormalisedDoubleConverter x:Key="DoublePercentageToNormalisedDoubleConverter"/>
+            <converters:DoublePercentageToDoubleDegreesConverter x:Key="DoublePercentageToDoubleDegreesConverter"/>
+            <converters:DoublePercentageToByteConverter x:Key="DoublePercentageToByteConverter"/>
+            <converters:MultipleBooleanAndToSingleBooleanConverter x:Key="MultipleBooleanAndToSingleBooleanConverter"/>
+            <converters:ObjectEqualsObjectToBooleanConverter x:Key="ObjectEqualsObjectToBooleanConverter"/>
+            <converters:DoubleEqualsValueToBooleanConverter x:Key="DoubleEqualsValueToBooleanConverter"/>
+            <converters:DoubleNotEqualsValueToBooleanConverter x:Key="DoubleNotEqualsValueToBooleanConverter"/>
+            <converters:GridModeToBooleanConverter x:Key="GridModeToBooleanConverter"/>
+            <Style TargetType="{x:Type Label}">
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+            </Style>
+            <Style TargetType="{x:Type controls:ClickSelectTextBox}">
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Foreground" Value="Black"/>
+                <Setter Property="Margin" Value="2"/>
+                <Setter Property="CharacterCasing" Value="Upper"/>
+                <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
+                <Style.Triggers>
+                    <Trigger Property="Validation.HasError" Value="True">
+                        <Setter Property="Foreground" Value="Red"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource BaseButtonStyle}">
+                <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
+            </Style>
+            <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource BaseToggleButtonStyle}">
+                <Setter Property="IsEnabled" Value="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}"/>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Window.CommandBindings>
+        <CommandBinding x:Name="ImportComandBinding" Command="{StaticResource ImportCommand}" Executed="ImportComandBinding_Executed"/>
+        <CommandBinding x:Name="ExportCommandBinding" Command="{StaticResource ExportCommand}" Executed="ExportCommandBinding_Executed"/>
+        <CommandBinding x:Name="ExitCommandBinding" Command="{StaticResource ExitCommand}" Executed="ExitCommandBinding_Executed"/>
+        <CommandBinding x:Name="AdddCommandBinding" Command="{StaticResource AddCommand}" Executed="AddCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateBalancedRedsCommandBinding" Command="{StaticResource PopulateBalancedRedsCommand}" Executed="PopulateBalancedRedsCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateBalancedGreensCommandBinding" Command="{StaticResource PopulateBalancedGreensCommand}" Executed="PopulateBalancedGreensCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateBalancedBuesCommandBinding" Command="{StaticResource PopulateBalancedBluesCommand}" Executed="PopulateBalancedBuesCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateBalancedCyansCommandBinding" Command="{StaticResource PopulateBalancedCyansCommand}" Executed="PopulateBalancedCyansCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateBalancedMagentasCommandBinding" Command="{StaticResource PopulateBalancedMagentasCommand}" Executed="PopulateBalancedMagentasCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateBalancedYellowsCommandBinding" Command="{StaticResource PopulateBalancedYellowsCommand}" Executed="PopulateBalancedYellowsCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateGrayscaleCommandBinding" Command="{StaticResource PopulateGrayscaleCommand}" Executed="PopulateGrayscaleCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulatePresentationFrameworkCommandBinding" Command="{StaticResource PopulatePresentationFrameworkColoursCommand}" Executed="PopulatePresentationFrameworkCommandBinding_Executed"/>
+        <CommandBinding x:Name="PopulateSystemColoursCommandBinding" Command="{StaticResource PopulateSystemColoursCommand}" Executed="PopulateSystemColoursCommandBinding_Executed"/>
+        <CommandBinding x:Name="SortRGBCommandBinding" Command="{StaticResource SortRGBCommand}" Executed="SortRGBCommandBinding_Executed"/>
+        <CommandBinding x:Name="SortCMYCommandBinding" Command="{StaticResource SortCMYCommand}" Executed="SortCMYCommandBinding_Executed"/>
+        <CommandBinding x:Name="SortHSVCommandBinding" Command="{StaticResource SortHSVCommand}" Executed="SortHSVCommandBinding_Executed"/>
+        <CommandBinding x:Name="SortGrayscaleCommandBinding" Command="{StaticResource SortRelativeGrayscaleCommand}" Executed="SortGrayscaleCommandBinding_Executed"/>
+        <CommandBinding x:Name="RandomizeCommandBinding" Command="{StaticResource RandomizeCommand}" Executed="randomizeCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardNonDominantRGBCommandBinding" Command="{StaticResource DiscardNonDominantRGBCommand}" Executed="DiscardNonDominantRGBCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardDominantRGBCommandBinding" Command="{StaticResource DiscardDominantRGBCommand}" Executed="DiscardDominantRGBCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardNonDominantCMYCommandBinding" Command="{StaticResource DiscardNonDominantCMYCommand}" Executed="DiscardNonDominantCMYCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardDominantCMYCommandBinding" Command="{StaticResource DiscardDominantCMYCommand}" Executed="DiscardDominantCMYCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardNonDominantGrayscaleCommandBinding" Command="{StaticResource DiscardNonDominantGrayscaleCommand}" Executed="DiscardNonDominantGrayscaleCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardDominantGrayscaleCommandBinding" Command="{StaticResource DiscardDominantGrayscaleCommand}" Executed="DiscardDominantGrayscaleCommandBinding_Executed"/>
+        <CommandBinding x:Name="DiscardDuplicatesCommandBinding" Command="{StaticResource DiscardDuplicatesCommand}" Executed="DiscardDuplicatesCommandBinding_Executed"/>
+        <CommandBinding x:Name="SelectiveRemovalCommandBinding" Command="{StaticResource SelectiveRemovalCommand}" Executed="SelectiveRemovalCommandBinding_Executed"/>
+        <CommandBinding x:Name="RemoveLastCommandBinding" Command="{StaticResource RemoveLastCommand}" Executed="RemoveLastCommandBinding_Executed"/>
+        <CommandBinding x:Name="RemovalAllCommandBinding" Command="{StaticResource RemoveAllCommand}" Executed="RemovalAllCommandBinding_Executed"/>
+        <CommandBinding x:Name="GatherROICommandBinding" Command="{StaticResource GatherROICommand}" Executed="GatherROICommandBinding_Executed"/>
+        <CommandBinding x:Name="GatherFullScreenCommandBinding" Command="{StaticResource GatherFullScreenCommand}" Executed="GatherFullScreenCommandBinding_Executed"/>
+        <CommandBinding x:Name="AboutCommandBinding" Command="{StaticResource AboutCommand}" Executed="AboutCommandBinding_Executed"/>
+        <CommandBinding x:Name="SetGridColumnsCommandBinding" Command="{StaticResource SetGridColumnsCommand}" Executed="SetGridColumnsCommandBinding_OnExecuted"/>
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="{StaticResource SortRGBCommand}" Gesture="Ctrl+B"/>
+        <KeyBinding Command="{StaticResource SortCMYCommand}" Gesture="Ctrl+K"/>
+        <KeyBinding Command="{StaticResource SortHSVCommand}" Gesture="Ctrl+H"/>
+        <KeyBinding Command="{StaticResource SortRelativeGrayscaleCommand}" Gesture="Ctrl+G"/>
+        <KeyBinding Command="{StaticResource RandomizeCommand}" Gesture="Ctrl+J"/>
+        <KeyBinding Command="{StaticResource SelectiveRemovalCommand}" Gesture="Ctrl+Shift+Q"/>
+        <KeyBinding Command="{StaticResource RemoveLastCommand}" Gesture="Ctrl+Q"/>
+        <KeyBinding Command="{StaticResource RemoveAllCommand}" Gesture="Ctrl+W"/>
+        <KeyBinding Command="{StaticResource GatherROICommand}" Gesture="Ctrl+R"/>
+        <KeyBinding Command="{StaticResource ImportCommand}" Gesture="Ctrl+Shift+I"/>
+        <KeyBinding Command="{StaticResource ExportCommand}" Gesture="Ctrl+Shift+E"/>
+    </Window.InputBindings>
+    <Grid Background="{StaticResource BackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition MinHeight="50" Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Menu Background="Black" Foreground="White">
+            <Menu.Resources>
+                <Style TargetType="{x:Type MenuItem}">
+                    <Setter Property="OverridesDefaultStyle" Value="True"/>
+                    <Setter Property="Margin" Value="2"/>
+                    <Style.Triggers>
+                        <Trigger Property="Role" Value="TopLevelHeader">
+                            <Setter Property="Template" Value="{StaticResource {x:Static MenuItem.TopLevelHeaderTemplateKey}}"/>
+                            <Setter Property="Grid.IsSharedSizeScope" Value="True"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="TopLevelItem">
+                            <Setter Property="Template" Value="{StaticResource {x:Static MenuItem.TopLevelItemTemplateKey}}"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="SubmenuHeader">
+                            <Setter Property="Template" Value="{StaticResource {x:Static MenuItem.SubmenuHeaderTemplateKey}}"/>
+                        </Trigger>
+                        <Trigger Property="Role" Value="SubmenuItem">
+                            <Setter Property="Template" Value="{StaticResource {x:Static MenuItem.SubmenuItemTemplateKey}}"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Menu.Resources>
+            <MenuItem Header="_File">
+                <MenuItem ToolTip="Export all colours to an image file" Command="{StaticResource ExportCommand}" InputGestureText="Ctrl+Shift+E">
+                    <MenuItem.IsEnabled>
+                        <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                            <Binding Path="HasChildrenColors" Mode="OneWay"/>
+                            <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                        </MultiBinding>
+                    </MenuItem.IsEnabled>
+                </MenuItem>
+                <MenuItem Command="{StaticResource ImportCommand}" ToolTip="Import colours from an image file" IsEnabled="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}" InputGestureText="Ctrl+Shift+I"/>
+                <Separator/>
+                <MenuItem ToolTip="Exit the program" Command="{StaticResource ExitCommand}"/>
+            </MenuItem>
+            <MenuItem Header="_Colours">
+                <MenuItem ToolTip="Add the current colour" Command="{StaticResource AddCommand}"/>
+                <MenuItem Header="Populate" IsEnabled="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}">
+                    <MenuItem ToolTip="Add all shades of red" Command="{StaticResource PopulateBalancedRedsCommand}"/>
+                    <MenuItem ToolTip="Add all shades of green" Command="{StaticResource PopulateBalancedGreensCommand}"/>
+                    <MenuItem ToolTip="Add all shades of blue" Command="{StaticResource PopulateBalancedBluesCommand}"/>
+                    <Separator/>
+                    <MenuItem ToolTip="Add all shades of cyan" Command="{StaticResource PopulateBalancedCyansCommand}"/>
+                    <MenuItem ToolTip="Add all shades of magenta" Command="{StaticResource PopulateBalancedMagentasCommand}"/>
+                    <MenuItem ToolTip="Add all shades of yellow" Command="{StaticResource PopulateBalancedYellowsCommand}"/>
+                    <Separator/>
+                    <MenuItem ToolTip="Add all grayscale shades" Command="{StaticResource PopulateGrayscaleCommand}"/>
+                    <Separator/>
+                    <MenuItem ToolTip="Add all colours explicitly defined in the Presentation Framework" Command="{StaticResource PopulatePresentationFrameworkColoursCommand}"/>
+                    <MenuItem ToolTip="Add all system colours" Command="{StaticResource PopulateSystemColoursCommand}"/>
+                </MenuItem>
+                <MenuItem Name="GatherMenuItem" Header="Gather" IsEnabled="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}" PreviewMouseDown="GatherMenuItem_PreviewMouseDown" MouseEnter="GatherMenuItem_MouseEnter">
+                    <MenuItem ToolTip="Gather all colours within a screen region" Command="{StaticResource GatherROICommand}" InputGestureText="Ctrl+R"/>
+                    <MenuItem ToolTip="Gather all colours within all of the screen regions" Command="{StaticResource GatherFullScreenCommand}"/>
+                    <MenuItem Name="GatherFromWindowMenuItem" Header="Window"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="Sort">
+                    <MenuItem.IsEnabled>
+                        <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                            <Binding Path="HasChildrenColors" Mode="OneWay"/>
+                            <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                        </MultiBinding>
+                    </MenuItem.IsEnabled>
+                    <MenuItem ToolTip="Sort all colours by alpha, red, green and blue" Command="{StaticResource SortRGBCommand}" InputGestureText="Ctrl+B"/>
+                    <MenuItem ToolTip="Sort all colours by cyan, magenta, yellow and key" Command="{StaticResource SortCMYCommand}" InputGestureText="Ctrl+K"/>
+                    <MenuItem ToolTip="Sort all colours by hue, saturation and value" Command="{StaticResource SortHSVCommand}" InputGestureText="Ctrl+H"/>
+                    <MenuItem ToolTip="Sort all colours by grayscale intensity" Command="{StaticResource SortRelativeGrayscaleCommand}" InputGestureText="Ctrl+G"/>
+                    <MenuItem ToolTip="Randomize all colours" Command="{StaticResource RandomizeCommand}" InputGestureText="Ctrl+J"/>
+                </MenuItem>
+                <MenuItem Header="Filter">
+                    <MenuItem.IsEnabled>
+                        <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                            <Binding Path="HasChildrenColors" Mode="OneWay"/>
+                            <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                        </MultiBinding>
+                    </MenuItem.IsEnabled>
+                    <MenuItem ToolTip="Discard all colours with a dominant RGB channel" Command="{StaticResource DiscardNonDominantRGBCommand}"/>
+                    <MenuItem ToolTip="Discard all colours with no dominant RGB channel" Command="{StaticResource DiscardDominantRGBCommand}"/>
+                    <Separator/>
+                    <MenuItem ToolTip="Discard all colours with a dominant CMY channel" Command="{StaticResource DiscardNonDominantCMYCommand}"/>
+                    <MenuItem ToolTip="Discard all colours with no dominant CMY channel" Command="{StaticResource DiscardDominantCMYCommand}"/>
+                    <Separator/>
+                    <MenuItem ToolTip="Discard all colours that are grayscale" Command="{StaticResource DiscardDominantGrayscaleCommand}"/>
+                    <MenuItem ToolTip="Discard all colours that aren't grayscale" Command="{StaticResource DiscardNonDominantGrayscaleCommand}"/>
+                    <Separator/>
+                    <MenuItem ToolTip="Discard all duplicate colours" Command="{StaticResource DiscardDuplicatesCommand}"/>
+                </MenuItem>
+                <Separator/>
+                <MenuItem ToolTip="Select and remove colours" Command="{StaticResource SelectiveRemovalCommand}" InputGestureText="Ctrl+Shift+Q" IsEnabled="{Binding Path=HasChildrenColors, Mode=OneWay}" IsCheckable="False">
+                    <MenuItem.IsChecked>
+                        <Binding Path="Mode" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                            <Binding.ConverterParameter>
+                                <classes:Mode>Delete</classes:Mode>
+                            </Binding.ConverterParameter>
+                        </Binding>
+                    </MenuItem.IsChecked>
+                </MenuItem>
+                <MenuItem ToolTip="Remove the last added colour" Command="{StaticResource RemoveLastCommand}" InputGestureText="Ctrl+Q" IsEnabled="{Binding Path=HasChildrenColors, Mode=OneWay}"/>
+                <MenuItem ToolTip="Remove all colours" Command="{StaticResource RemoveAllCommand}" InputGestureText="Ctrl+W" IsEnabled="{Binding Path=HasChildrenColors, Mode=OneWay}"/>
+            </MenuItem>
+            <MenuItem Header="_Options">
+                <MenuItem Header="Colour Space">
+                    <MenuItem ToolTip="Use the AGRB colour space" Header="ARGB" IsCheckable="True">
+                        <MenuItem.IsChecked>
+                            <Binding Path="ColorSpace" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                                <Binding.ConverterParameter>
+                                    <classes:ColorSpace>ARGB</classes:ColorSpace>
+                                </Binding.ConverterParameter>
+                            </Binding>
+                        </MenuItem.IsChecked>
+                    </MenuItem>
+                    <MenuItem ToolTip="Use the CMYK colour space" Header="CMYK" IsCheckable="True">
+                        <MenuItem.IsChecked>
+                            <Binding Path="ColorSpace" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                                <Binding.ConverterParameter>
+                                    <classes:ColorSpace>CMYK</classes:ColorSpace>
+                                </Binding.ConverterParameter>
+                            </Binding>
+                        </MenuItem.IsChecked>
+                    </MenuItem>
+                    <MenuItem ToolTip="Use the HSV colour space" Header="HSV" IsCheckable="True">
+                        <MenuItem.IsChecked>
+                            <Binding Path="ColorSpace" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                                <Binding.ConverterParameter>
+                                    <classes:ColorSpace>HSV</classes:ColorSpace>
+                                </Binding.ConverterParameter>
+                            </Binding>
+                        </MenuItem.IsChecked>
+                    </MenuItem>
+                </MenuItem>
+                <MenuItem Header="Grid Modes" IsEnabled="{Binding Path=AllBackgroundOperationsIdle, Mode=OneWay}">
+                    <MenuItem ToolTip="When selected colours are sized to a grid. When not selected colours are arranged by the specified number of columns" Header="Size Colours To Grid" StaysOpenOnClick="True" IsCheckable="True">
+                        <MenuItem.IsChecked>
+                            <Binding Path="GridMode" Mode="TwoWay" Converter="{StaticResource GridModeToBooleanConverter}"/>
+                        </MenuItem.IsChecked>
+                    </MenuItem>
+                    <MenuItem Header="Columns">
+                        <MenuItem.IsEnabled>
+                            <Binding Path="GridMode" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                                <Binding.ConverterParameter>
+                                    <classes:GridMode>MaintainSize</classes:GridMode>
+                                </Binding.ConverterParameter>
+                            </Binding>
+                        </MenuItem.IsEnabled>
+                        <MenuItem Header="1" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="1">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>1</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="2" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="2">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>2</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="3" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="3">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>3</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="4" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="4">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>4</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="5" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="5">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>5</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="6" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="6">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>6</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="7" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="7">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>7</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="8" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="8">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>8</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="9" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="9">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>9</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                        <MenuItem Header="10" IsCheckable="True" Command="{StaticResource SetGridColumnsCommand}" CommandParameter="10">
+                            <MenuItem.IsChecked>
+                                <Binding Path="FixedColumns" Mode="OneWay" Converter="{StaticResource DoubleEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Int32>10</sys:Int32>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                            </MenuItem.IsChecked>
+                        </MenuItem>
+                    </MenuItem>
+                </MenuItem>
+                <Separator/>
+                <MenuItem ToolTip="When selected the application will remain in the foreground" Header="Keep Application in Foreground" IsCheckable="True" IsChecked="{Binding Path=Topmost, Mode=TwoWay}" StaysOpenOnClick="True"/>
+                <MenuItem ToolTip="When selected the alpha channel is always set to maximum (fully opaque) for a true representation of the colour" Header="Max Out Alpha Channel for Previews" IsCheckable="True" IsChecked="{Binding Path=MaxOutAlphaOnPreview, Mode=TwoWay}" StaysOpenOnClick="True"/>
+            </MenuItem>
+            <MenuItem Header="_Help">
+                <MenuItem ToolTip="View the About window" Command="{StaticResource AboutCommand}"/>
+            </MenuItem>
+        </Menu>
+        <Border Background="White" BorderBrush="Black" BorderThickness="0,0,0,1.5" Grid.Row="1">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top">
+                <UniformGrid Name="ColoursGrid" Cursor="Hand" VerticalAlignment="{Binding Path=GridMode, Mode=OneWay, Converter={StaticResource GridModeToVerticalAlignmentConverter}}" FocusVisualStyle="{x:Null}" PreviewMouseDown="ColoursGrid_PreviewMouseDown">
+                    <UniformGrid.Resources>
+                        <Style x:Key="SizeableRectangleStyle" TargetType="Rectangle">
+                            <Setter Property="Stroke" Value="Transparent"/>
+                            <Setter Property="StrokeThickness" Value="0"/>
+                        </Style>
+                        <Style x:Key="SquareRectangleStyle" TargetType="Rectangle" BasedOn="{StaticResource SizeableRectangleStyle}">
+                            <Setter Property="Height" Value="{Binding RelativeSource={RelativeSource Self}, Path=ActualWidth, Mode=OneWay}"/>
+                        </Style>
+                        <Style TargetType="{x:Type Rectangle}" BasedOn="{StaticResource SizeableRectangleStyle}"/>
+                    </UniformGrid.Resources>
+                </UniformGrid>
+            </ScrollViewer>
+        </Border>
+        <Expander Header="Controls" ExpandDirection="Up" Foreground="White" Grid.Row="2">
+            <Grid Background="Black">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="100"/>
+                    <ColumnDefinition MinWidth="100" Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.RowSpan="3" Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.IsEnabled>
+                        <Binding Path="ColorSpace" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                            <Binding.ConverterParameter>
+                                <classes:ColorSpace>ARGB</classes:ColorSpace>
+                            </Binding.ConverterParameter>
+                        </Binding>
+                    </Grid.IsEnabled>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Label Content="Hex" Grid.Row="3" Grid.Column="0"/>
+                    <Label Content="Dec" Grid.Row="4" Grid.Column="0"/>
+                    <Label Content="%" Grid.Row="6" Grid.Column="0"/>
+                    <Label Content="#" Grid.Row="3" Grid.Column="1"/>
+                    <Label Content="A:" Grid.Row="1" Grid.Column="2"/>
+                    <Button Name="IncrementAlphaButton" Content="+" Grid.Row="2" Grid.Column="2" Click="IncrementAlphaButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Alpha" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>255</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <controls:ClickSelectTextBox MaxLength="2" Grid.Row="3" Grid.Column="2" TabIndex="0">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Alpha" Mode="TwoWay" Converter="{StaticResource ByteToHexStringConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:HexByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="4" Grid.Column="2" TabIndex="5">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Alpha" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:ByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="6" Grid.Column="2" TabIndex="9">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Alpha" Mode="TwoWay" Converter="{StaticResource ByteToDoublePercentConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Button Name="DeccrementAlphaButton" Content="-" Grid.Row="7" Grid.Column="2" Click="DecrementAlphaButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Alpha" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Label Content="R:" Grid.Row="1" Grid.Column="3"/>
+                    <Button Name="IncrementRedButton" Content="+" Grid.Row="2" Grid.Column="3" Click="IncrementRedButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Red" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>255</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <controls:ClickSelectTextBox MaxLength="2" Grid.Row="3" Grid.Column="3" TabIndex="1">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Red" Mode="TwoWay" Converter="{StaticResource ByteToHexStringConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:HexByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="4" Grid.Column="3" TabIndex="6">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Red" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:ByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="6" Grid.Column="3" TabIndex="10">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Red" Mode="TwoWay" Converter="{StaticResource ByteToDoublePercentConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Button Name="DecrementRedButton" Content="-" Grid.Row="7" Grid.Column="3" Click="DecrementRedButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Red" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Label Content="G:" Grid.Row="1" Grid.Column="4"/>
+                    <Button Name="IncrementGreenButton" Content="+" Grid.Row="2" Grid.Column="4" Click="IncrementGreenButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Green" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>255</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <controls:ClickSelectTextBox MaxLength="2" Grid.Row="3" Grid.Column="4" TabIndex="2">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Green" Mode="TwoWay" Converter="{StaticResource ByteToHexStringConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:HexByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="4" Grid.Column="4" TabIndex="7">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Green" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:ByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="6" Grid.Column="4" TabIndex="11">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Green" Mode="TwoWay" Converter="{StaticResource ByteToDoublePercentConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Button Name="DecrementGreenButton" Content="-" Grid.Row="7" Grid.Column="4" Click="DecrementGreenButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Green" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Label Content="B:" Grid.Row="1" Grid.Column="5"/>
+                    <Button Name="IncrementBlueButton" Content="+" Grid.Row="2" Grid.Column="5" Click="IncrementBlueButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Blue" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>255</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <controls:ClickSelectTextBox MaxLength="2" Grid.Row="3" Grid.Column="5" TabIndex="3">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Blue" Mode="TwoWay" Converter="{StaticResource ByteToHexStringConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:HexByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="4" Grid.Column="5" TabIndex="8">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Blue" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:ByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="3" Grid.Row="6" Grid.Column="5" TabIndex="12">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Blue" Mode="TwoWay" Converter="{StaticResource ByteToDoublePercentConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Button Name="DecrementBlueButton" Content="-" Grid.Row="7" Grid.Column="5" Click="DecrementBlueButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Blue" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                </Grid>
+                <Grid Grid.RowSpan="3" Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.IsEnabled>
+                        <Binding Path="ColorSpace" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                            <Binding.ConverterParameter>
+                                <classes:ColorSpace>CMYK</classes:ColorSpace>
+                            </Binding.ConverterParameter>
+                        </Binding>
+                    </Grid.IsEnabled>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Label Content="C:" Grid.Row="0" Grid.Column="1"/>
+                    <Label Content="M:" Grid.Row="0" Grid.Column="2"/>
+                    <Label Content="Y:" Grid.Row="0" Grid.Column="3"/>
+                    <Label Content="K:" Grid.Row="0" Grid.Column="4"/>
+                    <Label Content="Normalised" Grid.Row="2" Grid.Column="0"/>
+                    <Button Name="IncrementCyanButton" Content="+" Grid.Row="1" Grid.Column="1" Click="IncrementCyanButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Cyan" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="IncrementMagentaButton" Content="+" Grid.Row="1" Grid.Column="2" Click="IncrementMagentaButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Magenta" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="IncrementYellowButton" Content="+" Grid.Row="1" Grid.Column="3" Click="IncrementYellowButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Yellow" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="IncrementKeyButton" Content="+" Grid.Row="1" Grid.Column="4" Click="IncrementKeyButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="K" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="1" TabIndex="13">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Cyan" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="2" TabIndex="14">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Magenta" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="3" TabIndex="15">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Yellow" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="4" TabIndex="16">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="K" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Label Content="%" Grid.Row="3" Grid.Column="0"/>
+                    <controls:ClickSelectTextBox x:Name="cPercentTextBox" MaxLength="4" Grid.Row="3" Grid.Column="1" TabIndex="13">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Cyan" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="3" Grid.Column="2" TabIndex="14">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Magenta" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="3" Grid.Column="3" TabIndex="15">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Yellow" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="3" Grid.Column="4" TabIndex="16">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="K" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Button Name="DecrementCyanButton" Content="-" Grid.Row="4" Grid.Column="1" Click="DecrementCyanButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Cyan" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="DecrementMagentaButton" Content="-" Grid.Row="4" Grid.Column="2" Click="DecrementMagentaButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Magenta" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="DecrementYellowButton" Content="-" Grid.Row="4" Grid.Column="3" Click="DecrementYellowButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Yellow" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="DecrementKeyButton" Content="-" Grid.Row="4" Grid.Column="4" Click="DecrementKeyButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="K" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                </Grid>
+                <Grid Grid.RowSpan="3" Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="50"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.IsEnabled>
+                        <Binding Path="ColorSpace" Mode="TwoWay" Converter="{StaticResource ObjectEqualsObjectToBooleanConverter}">
+                            <Binding.ConverterParameter>
+                                <classes:ColorSpace>HSV</classes:ColorSpace>
+                            </Binding.ConverterParameter>
+                        </Binding>
+                    </Grid.IsEnabled>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Label Content="H:" Grid.Row="0" Grid.Column="1"/>
+                    <Label Content="S:" Grid.Row="0" Grid.Column="2"/>
+                    <Label Content="V:" Grid.Row="0" Grid.Column="3"/>
+                    <Label Content="Normalised" Grid.Row="2" Grid.Column="0"/>
+                    <Label Content="%" Grid.Row="3" Grid.Column="0"/>
+                    <Label Content="D, N, B" Grid.Row="4" Grid.Column="0"/>
+                    <Button Name="IncrementHueButton" Content="+" Grid.Row="1" Grid.Column="1" Click="IncrementHueButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Hue" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="IncrementSaturationButton" Content="+" Grid.Row="1" Grid.Column="2" Click="IncrementSaturationButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Saturation" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="IncrementValueButton" Content="+" Grid.Row="1" Grid.Column="3" Click="IncrementValueButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Value" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>100</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="1" TabIndex="13">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Hue" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="2" TabIndex="14">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Saturation" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="2" Grid.Column="3" TabIndex="15">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Value" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="3" Grid.Column="1" TabIndex="13">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Hue" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="3" Grid.Column="2" TabIndex="14">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Saturation" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="3" Grid.Column="3" TabIndex="15">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Value" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DoublePercentageValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="6" Grid.Row="4" Grid.Column="1" TabIndex="13">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Hue" Mode="TwoWay" Converter="{StaticResource DoublePercentageToDoubleDegreesConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:DegreeDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="4" Grid.Column="2" TabIndex="14">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Saturation" Mode="TwoWay" Converter="{StaticResource DoublePercentageToNormalisedDoubleConverter}" UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:NormalisedDoubleValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <controls:ClickSelectTextBox MaxLength="4" Grid.Row="4" Grid.Column="3" TabIndex="15">
+                        <controls:ClickSelectTextBox.Text>
+                            <Binding Path="Value" Mode="TwoWay" Converter="{StaticResource DoublePercentageToByteConverter}"
+                                     UpdateSourceTrigger="PropertyChanged">
+                                <Binding.ValidationRules>
+                                    <validation:ByteValidationRule/>
+                                </Binding.ValidationRules>
+                            </Binding>
+                        </controls:ClickSelectTextBox.Text>
+                    </controls:ClickSelectTextBox>
+                    <Button Name="DecrementHueButton" Content="-" Grid.Row="5" Grid.Column="1" Click="DecrementHueButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Hue" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="DecrementSaturationButton" Content="-" Grid.Row="5" Grid.Column="2" Click="DecrementSaturationButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Saturation" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                    <Button Name="DecrementValueButton" Content="-" Grid.Row="5" Grid.Column="3" Click="DecrementValueButton_Click">
+                        <Button.IsEnabled>
+                            <MultiBinding Converter="{StaticResource MultipleBooleanAndToSingleBooleanConverter}">
+                                <Binding Path="Value" Mode="OneWay" Converter="{StaticResource DoubleNotEqualsValueToBooleanConverter}">
+                                    <Binding.ConverterParameter>
+                                        <sys:Double>0</sys:Double>
+                                    </Binding.ConverterParameter>
+                                </Binding>
+                                <Binding Path="AllBackgroundOperationsIdle" Mode="OneWay"/>
+                            </MultiBinding>
+                        </Button.IsEnabled>
+                    </Button>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition MinWidth="100" Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="75"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Name="PreviewBorder" BorderThickness="1.5" CornerRadius="3" BorderBrush="White" Margin="2" Background="White" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2">
+                        <Border Name="SwatchBorder" BorderThickness="0"/>
+                    </Border>
+                    <Button Name="PickColorButton" Content="Pick Colour" Grid.Row="1" Grid.Column="0" PreviewMouseDown="PickColorButton_PreviewMouseDown"/>
+                    <Button Name="InfoButton" Content="Info..." Grid.Row="1" Grid.Column="1" Click="InfoButton_Click"/>
+                    <Button Name="AddButton" Content="Add" Grid.Row="0" Grid.RowSpan="3" Grid.Column="2" Click="AddButton_Click" TabIndex="4"/>
+                    <Button Name="ResetButton" Content="Reset" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Click="ResetButton_Click"/>
+                </Grid>
+            </Grid>
+        </Expander>
+        <Border Background="Transparent" BorderThickness="0,1,0,0" Margin="0,2,0,0" BorderBrush="White" Grid.Row="3">
+            <StatusBar Name="StatusBar" Background="Black">
+                <Grid Width="{Binding ElementName=StatusBar, Path=ActualWidth, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Label HorizontalContentAlignment="Left" HorizontalAlignment="Left" Content="{Binding Path=Status, Mode=OneWay}" Grid.Column="0"/>
+                    <Label Content="Colours:" Grid.Column="1"/>
+                    <Label Content="{Binding Path=ColorCount, Mode=OneWay}" Margin="0,0,4,0" Grid.Column="2"/>
+                </Grid>
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid/>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+            </StatusBar>
+        </Border>
+    </Grid>
+</Window>
