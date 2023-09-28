@@ -21,8 +21,5 @@ This is an old project now, it was started in 2010 and has been dormant for many
  * Build all projects
  * Run the BP.ColourChimp project
 
-# Contribute
-It´s Open Source (License >> MIT), please feel free to use or contribute. To raise a pull request visit https://github.com/ben-pollard-uk/colour-chimp/pulls.
-
 # For Open Questions
 Visit https://github.com/ben-pollard-uk/colour-chimp/issues
