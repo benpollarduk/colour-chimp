@@ -22,4 +22,4 @@ This is an old project now, it was started in 2010 and has been dormant for many
  * Run the BP.ColourChimp project
 
 # For Open Questions
-Visit https://github.com/ben-pollard-uk/colour-chimp/issues
+Visit https://github.com/benpollarduk/colour-chimp/issues
