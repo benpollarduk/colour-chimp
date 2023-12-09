@@ -1,4 +1,4 @@
-[![GitHub release](https://img.shields.io/github/release/benpollarduk/colour-chimp.svg)](https://github.com/benpollarduk/ktvn/releases)
+[![GitHub release](https://img.shields.io/github/release/benpollarduk/colour-chimp.svg)](https://github.com/benpollarduk/colour-chimp/releases)
 [![License](https://img.shields.io/github/license/benpollarduk/colour-chimp.svg)](https://opensource.org/licenses/MIT)
 
 # Introduction 
