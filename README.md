@@ -1,3 +1,6 @@
+[![GitHub release](https://img.shields.io/github/release/benpollarduk/colour-chimp.svg)](https://github.com/benpollarduk/ktvn/releases)
+[![License](https://img.shields.io/github/license/benpollarduk/colour-chimp.svg)](https://opensource.org/licenses/MIT)
+
 # Introduction 
 .NET 4.6.1 application written in WPF to provide a tool to help compare and convert colours. Supports ARGB, CMYK and HSV colour spaces.
 
