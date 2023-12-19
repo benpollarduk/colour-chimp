@@ -20,9 +20,9 @@ This is an old project now, it was started in 2010 and has been dormant for many
    * Download free IDE Visual Studio 2022 Community ( >> https://visualstudio.microsoft.com/de/vs/community/ ), or use commercial Visual Studio 2022 Version.
 
 # Getting Started
- * Clone the repo
- * Build all projects
- * Run the BP.ColourChimp project
+ * Clone the repo.
+ * Build all projects.
+ * Run the BP.ColourChimp project.
 
 # For Open Questions
 Visit https://github.com/benpollarduk/colour-chimp/issues
