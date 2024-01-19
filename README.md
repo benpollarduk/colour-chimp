@@ -1,6 +1,6 @@
 <div align="center">
 
-# Colour Chimp
+# BP.ColourChimp
 
 .NET 4.6.1 application written in WPF to provide a tool to help compare and convert colours. Supports ARGB, CMYK and HSV colour spaces.
 
