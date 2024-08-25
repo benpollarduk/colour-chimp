@@ -19,7 +19,7 @@ Provides a simple information window for any of the colours that can be used to 
 Provides functionality to gather colours from open windows and screen regions, and supports importing of colours from an image. Colours can be filtered and sorted.
 
 ## Notes
-This is an old project now, it was started in 2010 and has been dormant for many years although the tool itself has provded useful numerous times. It has received some quality of life updates, but the underlying architecture is fundamentally flawed and requires revision before being developed any further. Colours are stored as rectangles in a UICollection which makes overall management slow and cumbersome. Colours should be broken away from the UI itself.
+This is an old project now, it was started in 2010 and has been dormant for many years although the tool itself has proven to be useful numerous times. It has received some quality of life updates, but the underlying architecture is fundamentally flawed and requires revision before being developed any further. Colours are stored as rectangles in a UICollection which makes overall management slow and cumbersome. Colours should be broken away from the UI itself.
 
 ## Prerequisites
  * Windows
