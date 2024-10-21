@@ -21,10 +21,6 @@ Provides functionality to gather colours from open windows and screen regions, a
 ## Notes
 This is an old project now, it was started in 2010 and has been dormant for many years although the tool itself has proven to be useful numerous times. It has received some quality of life updates, but the underlying architecture is fundamentally flawed and requires revision before being developed any further. Colours are stored as rectangles in a UICollection which makes overall management slow and cumbersome. Colours should be broken away from the UI itself.
 
-## Prerequisites
- * Windows
-   * Download free IDE Visual Studio 2022 Community ( >> https://visualstudio.microsoft.com/de/vs/community/ ), or use commercial Visual Studio 2022 Version.
-
 ## Getting Started
  * Clone the repo.
  * Build all projects.
